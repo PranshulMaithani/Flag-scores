@@ -1,0 +1,188 @@
+{
+  "ordinal": {
+    "grammar": {
+      "spearman": 0.8988648090815273,
+      "pairwise_accuracy": 0.9444444444444444
+    },
+    "lexical": {
+      "spearman": 0.8555211558307534,
+      "pairwise_accuracy": 0.9444444444444444
+    },
+    "relevance": {
+      "spearman": -0.1847265221878225,
+      "pairwise_accuracy": 0.3888888888888889
+    }
+  },
+  "flags": {
+    "prompt_read": {
+      "auc": 1.0,
+      "best_threshold": 21.0,
+      "tpr": 1.0,
+      "fpr": 0.0,
+      "tpr_at_55": 1.0,
+      "fpr_at_55": 0.0
+    },
+    "repetition": {
+      "auc": 1.0,
+      "best_threshold": 5.0,
+      "tpr": 1.0,
+      "fpr": 0.0,
+      "tpr_at_55": 1.0,
+      "fpr_at_55": 0.0
+    },
+    "off_topic": {
+      "auc": 1.0,
+      "best_threshold": 28.0,
+      "tpr": 1.0,
+      "fpr": 0.0,
+      "tpr_at_55": 0.6666666666666666,
+      "fpr_at_55": 0.0
+    }
+  },
+  "rows": [
+    {
+      "qid": "birthday",
+      "level": "weak",
+      "grammar": 50.29089281017921,
+      "lexical": 29.565646504209226,
+      "relevance": 68.17895003287593,
+      "text": "My birthday is last month only. I am not doing anything big because I am having office work. My mother she make one cake at home. Uh, we are eating cake and after that I am sleeping early. It was nice. I am happy in that day. That's all about my birthday."
+    },
+    {
+      "qid": "birthday",
+      "level": "mid",
+      "grammar": 39.550505050505045,
+      "lexical": 48.56277882794798,
+      "relevance": 82.56934137515334,
+      "text": "So my last birthday was actually quite simple. I didn't planned anything big because most of my friends were busy with their work. Um, my roommate he ordered a chocolate cake and we called few friends in the evening. We were talking and playing music till late night. I think it was better than going to some expensive restaurant, na. I felt very happy that day."
+    },
+    {
+      "qid": "birthday",
+      "level": "strong",
+      "grammar": 64.01845782301191,
+      "lexical": 65.44701485406786,
+      "relevance": 62.62279327656505,
+      "text": "My most recent birthday turned out far quieter than I'd expected, and honestly that suited me. I'd been travelling for work the whole month before, so the idea of organising anything elaborate felt exhausting. Um, in the end my flatmate just cooked, and two friends came over with an absurdly ugly cake they'd decorated themselves. We ended up talking until about two in the morning about nothing in particular. I remember thinking that it felt completely unforced, which is rare."
+    },
+    {
+      "qid": "lost_touch_friend",
+      "level": "weak",
+      "grammar": 10.37114845938375,
+      "lexical": 37.797472043531755,
+      "relevance": 83.74086007024759,
+      "text": "I am having one friend in school. His name is Rahul. We are playing cricket daily in evening time. After tenth standard he is going to other city. Now we are not talking. Sometimes I am thinking about him. I am missing him only. It is sad thing."
+    },
+    {
+      "qid": "lost_touch_friend",
+      "level": "mid",
+      "grammar": 52.765481613520826,
+      "lexical": 51.95751329171803,
+      "relevance": 89.03801271095809,
+      "text": "There was one friend, Meera, we were very close during our college days. We used to sit together in every class and we were sharing everything, you know. After graduation she got a job in Bangalore and I stayed back in my hometown. Slowly slowly we stopped calling each other. Uh, now we are only connected on social media but we don't talk properly. I feel bad about it sometimes."
+    },
+    {
+      "qid": "lost_touch_friend",
+      "level": "strong",
+      "grammar": 83.65653137711962,
+      "lexical": 48.793645631940855,
+      "relevance": 69.8705122236413,
+      "text": "There's someone I was inseparable from for most of secondary school, and I genuinely couldn't tell you when we stopped speaking. We sat together in nearly every class, had the same terrible taste in music, and spent entire weekends doing absolutely nothing productive. Uh, then she moved abroad for university and I started working, and the gap between messages just stretched. There wasn't a falling out, which is somehow worse. I still think about messaging her and then don't, because I'd have no idea where to begin."
+    },
+    {
+      "qid": "happy_place",
+      "level": "weak",
+      "grammar": 27.58970254768574,
+      "lexical": 14.26928046114094,
+      "relevance": 84.12960991453984,
+      "text": "My happy place is my home only. I am feeling good in my room. There is one window and I am seeing outside trees. I am sitting there and listening songs. It is peaceful place for me. I am liking it very much."
+    },
+    {
+      "qid": "happy_place",
+      "level": "mid",
+      "grammar": 50.748428558026085,
+      "lexical": 31.611744610359445,
+      "relevance": 76.63830821344321,
+      "text": "The place where I feel most comfortable is my grandmother's house in the village. It's not a fancy place but there is something about it, the smell of cooking and the sound of the fan. Um, whenever I am going there I feel very relaxed immediately. I have been going there since my childhood so maybe that is the reason. I always feel calm in that house."
+    },
+    {
+      "qid": "happy_place",
+      "level": "strong",
+      "grammar": 84.53225061068198,
+      "lexical": 49.268558188851166,
+      "relevance": 80.30766701913093,
+      "text": "Honestly the place that comes to mind immediately is a tiny cafe near where I used to study. It isn't much to look at, the chairs wobble and the lighting is genuinely bad, but I spent two years of exams in that corner seat. Um, the owner still recognises me even though I moved away. I think comfort has more to do with being known somewhere than with the place itself being nice."
+    },
+    {
+      "qid": "healthy_habit",
+      "level": "weak",
+      "grammar": 22.66321301247772,
+      "lexical": 22.74802337977421,
+      "relevance": 86.80651420186405,
+      "text": "I am drinking water daily. Doctor is telling me to drink more water so I am doing it. I am keeping one bottle near my table. It is good for health. I am feeling fresh after drinking water. This is my habit."
+    },
+    {
+      "qid": "healthy_habit",
+      "level": "mid",
+      "grammar": 72.20749886407327,
+      "lexical": 39.89108076572291,
+      "relevance": 79.78604346261498,
+      "text": "One habit I follow is walking every morning before my office. I started this last year because I was feeling very tired all the time. Uh, in the beginning it was difficult to wake up early but now I am used to it. I walk around thirty minutes in the park near my house. It is helping me to feel more energetic."
+    },
+    {
+      "qid": "healthy_habit",
+      "level": "strong",
+      "grammar": 83.15829291547486,
+      "lexical": 45.86481366788328,
+      "relevance": 79.28656993327554,
+      "text": "The one habit that's genuinely stuck is walking, just half an hour every evening, nothing dramatic. I started almost by accident when I cancelled a gym membership I was never using. Um, what keeps me doing it isn't the exercise really, it's that it's the only part of the day where I'm not looking at a screen. I've noticed I sleep better, though I couldn't prove the two are connected."
+    },
+    {
+      "qid": "tech_on_thinking",
+      "level": "weak",
+      "grammar": 35.86445417327771,
+      "lexical": 19.683026817310388,
+      "relevance": 55.48942951356578,
+      "text": "Technology is good and also bad. We are using mobile for everything. Some people are using too much mobile. It is making them lazy. But also we are getting information fast. So it is both good and bad thing. I think technology is helping us."
+    },
+    {
+      "qid": "tech_on_thinking",
+      "level": "mid",
+      "grammar": 56.29488158899923,
+      "lexical": 43.88859526843286,
+      "relevance": 80.73236743805053,
+      "text": "I think technology has made people more dependent, definitely. For example nobody is remembering phone numbers now because everything is saved in the mobile. Uh, also for direction we are fully depending on maps, if the network is not there then people are getting confused. But at the same time we can learn anything from internet which was not possible before. So I would say it is making us dependent but also giving us more knowledge."
+    },
+    {
+      "qid": "tech_on_thinking",
+      "level": "strong",
+      "grammar": 87.66218333063253,
+      "lexical": 51.768553607133484,
+      "relevance": 77.65327697759632,
+      "text": "I'd argue it's made us more dependent, though I don't think that's automatically a bad thing. The obvious case is navigation, because almost nobody I know can read a map anymore, but that's a trade rather than a loss, since we've bought back a lot of time. Um, what actually worries me is attention, since constant notifications make sustained thinking genuinely harder. So on balance it expands what we're capable of while weakening how long we can concentrate on any one thing."
+    },
+    {
+      "qid": "teamwork_vs_alone",
+      "level": "weak",
+      "grammar": 47.11441701116294,
+      "lexical": 24.986274667223313,
+      "relevance": 71.56594394501349,
+      "text": "Teamwork is good. When we are working together we are finishing work fast. But sometimes people are not doing their part. Then one person is doing all work. So alone is also okay. I think both are good in different time."
+    },
+    {
+      "qid": "teamwork_vs_alone",
+      "level": "mid",
+      "grammar": 56.0386427298192,
+      "lexical": 41.69487057955441,
+      "relevance": 71.51961501801466,
+      "text": "I don't think teamwork is always giving better results. It depends on the work, no? If the task is creative then working alone is better because you can focus properly. Uh, but if it is a big project then definitely you need a team because one person cannot handle everything. Also in a team sometimes there are too many opinions and decision is getting delayed. So my answer is it depends on the situation."
+    },
+    {
+      "qid": "teamwork_vs_alone",
+      "level": "strong",
+      "grammar": 88.08693553178847,
+      "lexical": 60.93553379630352,
+      "relevance": 76.971558464898,
+      "text": "Not always, no. Teams are clearly better when a problem is too large for one person to hold in their head, or when it genuinely needs different kinds of expertise. But there's a real cost that people underestimate, which is coordination. Uh, I've been on projects where we spent more time aligning than actually building. And for anything requiring sustained concentration, working alone usually wins outright. So I'd say teamwork helps with scale and breadth, and hurts with depth and speed."
+    }
+  ]
+}

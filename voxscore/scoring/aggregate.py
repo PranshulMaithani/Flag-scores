@@ -180,8 +180,11 @@ def _relevance_anchor_card(f: dict[str, float]) -> dict[str, tuple[float, float,
             0.25, _curve(f.get("sim_q", 0), 0.35, 0.72),
             "overall topical match to the question",
         ),
+        # Weight collapses when the response was too short to measure drift, so
+        # an unmeasurable response abstains instead of scoring a free pass.
         "pct_windows_offtopic": (
-            0.35 - w_content * 0.5, _curve(f.get("pct_windows_offtopic", 0), 0.7, 0.0),
+            (0.35 - w_content * 0.5) * f.get("drift_available", 1.0),
+            _curve(f.get("pct_windows_offtopic", 0), 0.7, 0.0),
             "share of the response drifting off topic, thresholded per question "
             "against the ideal answers rather than absolutely",
         ),
@@ -208,8 +211,13 @@ def _relevance_engagement_card(f: dict[str, float]) -> dict[str, tuple[float, fl
             "content beyond the question's own words; the defence against an "
             "answer that scores well by restating the prompt",
         ),
+        # Weight collapses to zero when no ideal answers exist for this question,
+        # so its absence is redistributed across the other features rather than
+        # silently subtracting a fixed amount from every response to that
+        # question. _weighted() renormalises by the surviving weights.
         "profile_match": (
-            0.25, _curve(f.get("profile_match", 0), 0.05, 0.30),
+            0.25 if f.get("profile_match", 0.0) > 0 else 0.0,
+            _curve(f.get("profile_match", 0), 0.05, 0.30),
             "structural fit to the ideal answers as a distribution -- did the "
             "candidate perform the speech act the prompt demanded",
         ),

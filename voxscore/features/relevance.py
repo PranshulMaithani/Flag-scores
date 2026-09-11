@@ -50,6 +50,10 @@ MOVE_DEDUP_THRESHOLD = 0.85
 # Soft match threshold for a question content term being addressed.
 TERM_MATCH_THRESHOLD = 0.45
 
+# Topic-drift windowing. Windows below ~25 words embed too noisily to compare.
+MIN_WINDOW_WORDS = 25
+MIN_DRIFT_WORDS = 75
+
 
 # --------------------------------------------------------------------------- #
 # Structural profile
@@ -431,9 +435,22 @@ def relevance_features(
     f.update(drift)
 
     # --- specificity: that detail exists, never which detail ---
+    # Counts concrete *vocabulary* as well as named entities. Counting only NER
+    # and numerals scored 0.000 on a strong answer that was dense with detail
+    # ("inseparable", "secondary school", "terrible taste in music") but which
+    # deliberately never named the friend -- saying "someone" and "she"
+    # throughout. Declining to name a person is a stylistic choice, not an
+    # absence of specificity, and penalising it would systematically mark down
+    # exactly the discreet, fluent answers we most want to reward.
     n = max(response.n_tokens, 1)
     numerals = sum(1 for t in response.pos if t == "NUM")
-    f["specificity"] = float((len(response.entities) + numerals) / n * 100)
+    concrete = sum(
+        1 for l, pos in zip(response.lemmas, response.pos)
+        if pos in {"NOUN", "PROPN", "VERB", "ADJ"} and l.isalpha()
+        and _informativeness(l) >= 1.5
+    )
+    f["specificity"] = float((len(response.entities) + numerals + concrete) / n * 100)
+    f["entity_specificity"] = float((len(response.entities) + numerals) / n * 100)
 
     # --- unsupported content ---
     q_and_ideal = set(rubric.question_terms)
@@ -473,15 +490,28 @@ def _topic_drift(
     whole-response embedding, which averages the drift away.
     """
     words = response.masked.split()
+    # drift_available distinguishes "measured as on-topic" from "too short to
+    # measure". Returning 0.0 for both reads as a clean bill of health, which
+    # silently favoured short responses: with a 75-word minimum, a 52-word answer
+    # scored a free 0% off-topic while an 80-word answer was actually assessed.
     _empty = {"topic_drift_slope": 0.0, "min_window_sim": 0.0, "mean_window_sim": 0.0,
-              "window_sim_vs_ref": 0.0, "pct_windows_offtopic": 0.0}
-    if len(words) < 20 or rubric.emb_question is None:
+              "window_sim_vs_ref": 0.0, "pct_windows_offtopic": 0.0,
+              "drift_available": 0.0}
+
+    # Minimum window size, not a fixed window count. Short windows give unstable
+    # embeddings: on 48-87 word fixtures a fixed 4-way split produced ~15-word
+    # windows and pct_windows_offtopic came out 0.50 / 0.00 / 0.50 across three
+    # responses that were all squarely on topic -- pure noise, and it was the
+    # single largest source of error in relevance ranking.
+    if len(words) < MIN_DRIFT_WORDS or rubric.emb_question is None:
         return dict(_empty)
 
-    size = max(len(words) // n_windows, 8)
+    size = max(len(words) // n_windows, MIN_WINDOW_WORDS)
     chunks = [" ".join(words[i: i + size]) for i in range(0, len(words), size)]
-    chunks = [c for c in chunks if len(c.split()) >= 5]
-    if len(chunks) < 2:
+    chunks = [c for c in chunks if len(c.split()) >= MIN_WINDOW_WORDS // 2]
+    # Fewer than three windows cannot distinguish drift from noise; report
+    # neutral rather than a number that looks like a measurement.
+    if len(chunks) < 3:
         return dict(_empty)
 
     sims = cosine_matrix(embedder.encode(chunks), rubric.emb_question)[:, 0]
@@ -502,6 +532,7 @@ def _topic_drift(
         "mean_window_sim": float(sims.mean()),
         "window_sim_vs_ref": float(sims.mean() / ref) if ref > 0 else 0.0,
         "pct_windows_offtopic": float((sims < thresh).mean()),
+        "drift_available": 1.0,
     }
 
 
@@ -554,7 +585,7 @@ _FEATURE_NAMES = (
     "profile_match", "topic_drift_slope", "min_window_sim", "pct_windows_offtopic",
     "specificity", "unsupported_content_ratio", "stance_clarity", "reason_count",
     "content_novelty_vs_q", "content_word_rate", "distinct_content_rate",
-    "mean_window_sim", "window_sim_vs_ref",
+    "mean_window_sim", "window_sim_vs_ref", "entity_specificity", "drift_available",
     "counterargument_presence", "evidence_presence", "nli_move_entailment",
     "nli_self_contradiction",
 ) + tuple(f"prof_{k}" for k in PROFILE_KEYS)

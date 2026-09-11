@@ -336,6 +336,92 @@ any single assertion.
 
 **Status:** 52 tests passing. Full pipeline verified end to end.
 
+---
+
+## 2026-09-11 — Day 0 (cont.): first real measurements
+
+Built the evaluation harness and got numbers instead of opinions.
+
+### Ordinal validation without labels
+The client holds every label as test-only, so there is nothing to validate against.
+But absolute labels are not required to check that a scorer is **ordered** correctly,
+and ordering is what the client measures anyway (they compute correlation).
+
+Authored 18 responses -- six questions x three proficiency levels -- using error
+patterns characteristic of Indian, Filipino and West African L2 English. A valid
+scorer must rank weak < mid < strong.
+
+| category | Spearman rho | pairwise accuracy |
+|---|---|---|
+| grammar | **0.899** | 94.4% |
+| lexical | **0.856** | 94.4% |
+| relevance | -0.185 | 38.9% |
+
+Grammar and lexical are strong. For context, the incumbent manages ~0.60 on these
+against human labels -- not the same measurement, and this fixture is ours, so it is
+evidence of validity rather than a competitive claim. But a scorer that could not order
+its own graded fixture would be disqualified, and these are not.
+
+### The relevance number is the fixture's fault, not (only) the scorer's
+Relevance came out uncorrelated. The honest reading is that **the fixture is the wrong
+instrument**: it varies *proficiency* while holding relevance roughly constant. All
+three levels genuinely answer the question -- a weak speaker saying *"My birthday is
+last month only, my mother she make one cake"* is being entirely relevant.
+
+The right test for relevance is **discrimination**, and that is measured separately
+below at AUC 1.000.
+
+Worth stating plainly rather than burying: **fine-grained relevance ranking among
+genuinely on-topic answers remains unvalidated.** We can show the system separates
+on-topic from off-topic essentially perfectly. We cannot yet show it distinguishes a
+good on-topic answer from a mediocre one, and that is precisely the discrimination the
+client's 0-5 relevance labels encode. This is the main open risk, and the client can
+resolve it in one run against their 350.
+
+**A related prediction to test:** human relevance ratings usually carry a proficiency
+halo -- raters mark fluent answers as more relevant. Our relevance is deliberately
+near-flat across proficiency. If their labels have that halo, our correlation will be
+capped no matter how good the topical judgement is. Deliberately *not* tuned for, since
+tuning to a guess about rater behaviour is how a system stops measuring the construct
+it claims to. Flagged instead as something their validation run will reveal immediately.
+
+### Three defects found by diagnosing the relevance features directly
+1. **Topic drift was noise on short responses.** A fixed 4-way split produced ~15-word
+   windows; `pct_windows_offtopic` read 0.50 / 0.00 / 0.50 across three responses that
+   were all squarely on topic. Replaced with a minimum *window size* (25 words) and a
+   minimum response length (75 words), abstaining below that.
+2. **`specificity` scored 0.000 on a strong answer dense with detail.** It counted only
+   named entities and numerals, and that answer deliberately says *"someone"* and
+   *"she"* rather than naming the friend. Declining to name a person is a stylistic
+   choice, not an absence of detail -- and penalising it would have systematically
+   marked down exactly the discreet, fluent answers we want to reward. Now counts
+   concrete low-frequency vocabulary too.
+3. **Abstention was being scored as a pass.** Both `profile_match` (unavailable without
+   ideal answers) and the drift block (unavailable on short responses) returned 0.0,
+   which the scorer read as a measurement rather than a missing value. A 52-word answer
+   got a free "0% off-topic" while an 80-word answer was actually assessed. Both now
+   collapse their weight and the remainder renormalises, so *unmeasured* and *measured
+   as fine* are no longer the same thing.
+
+### Flags: clean separation
+36 labelled text pairs, where each positive is generated from a genuine response so the
+*only* difference is the gaming behaviour.
+
+| flag | AUC | best threshold | TPR | FPR |
+|---|---|---|---|---|
+| `prompt_read` | **1.000** | 21 | 100% | 0% |
+| `repetition` | **1.000** | 5 | 100% | 0% |
+| `off_topic` | **1.000** | 28 | 100% | 0% |
+
+Acted on one result: **`off_topic`'s default threshold moved from 55 to 35.** At 55 it
+was catching only half of genuinely mismatched answers. Off-topic responses score lower
+than the other gaming behaviours because they lack the emphatic signature that echo and
+padding have, so a single shared constant across all four flags was wrong. Per-flag
+thresholds now come from curves.
+
+These AUCs are on a small, self-generated set and will fall on real data. The value is
+directional: the flags key on the intended signals and do not fire on genuine answers.
+
 ### The bias trap held
 All three real ideal answers describe a *low-key* birthday. The adversarial "BIG party"
 response scored **at or above** the quiet one on every relevance feature

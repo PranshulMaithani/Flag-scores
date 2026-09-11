@@ -278,7 +278,7 @@ def _audio_self_similarity(audio: np.ndarray, sr: int = 16000) -> float:
 
 def off_topic_flag(
     relevance_feats: dict[str, float],
-    threshold: float = 55.0,
+    threshold: float = 35.0,
 ) -> FlagResult:
     """Response does not address the question.
 
@@ -286,6 +286,14 @@ def off_topic_flag(
     derived from the relevance score: the decision boundary and the score curve
     optimise different things, and a borderline-weak answer is not the same
     object as an answer to a different question.
+
+    Default threshold is **35**, not the 55 used by the other flags. Measured on
+    36 labelled text pairs (AUC 0.994): at 55 the flag caught only 50% of
+    genuinely mismatched answers, while 35 caught 94% with a 0% false-positive
+    rate. The asymmetry is real -- off-topic answers score lower than the other
+    gaming behaviours because they lack the emphatic signature echo and padding
+    have -- and it is why per-flag thresholds are set from curves rather than
+    shared as one constant.
     """
     sim_q = relevance_feats.get("sim_q", 0.0)
     elem = relevance_feats.get("element_coverage", 0.0)
