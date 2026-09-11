@@ -59,10 +59,27 @@ GRAMMAR_FEATURES = (
 
 @lru_cache(maxsize=1)
 def _load_gec(model_id: str, device_str: str):
+    """Load the corrector, preferring the fast tokenizer but not requiring it.
+
+    Building a *fast* T5 tokenizer from a sentencepiece model needs both
+    `sentencepiece` and `protobuf`, and when either is missing transformers
+    raises "Couldn't instantiate the backend tokenizer". The *slow* tokenizer
+    needs only sentencepiece and no conversion step at all, so it is the right
+    fallback -- marginally slower per call, and the grammar block is not the
+    bottleneck.
+
+    Observed on the client's EC2 instance: sentencepiece present, fast conversion
+    still failing, grammar silently abstaining for every item.
+    """
     import torch
     from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-    tok = AutoTokenizer.from_pretrained(model_id)
+    try:
+        tok = AutoTokenizer.from_pretrained(model_id)
+    except Exception as exc:
+        log.warning("fast tokenizer unavailable (%s); using the slow one", exc)
+        tok = AutoTokenizer.from_pretrained(model_id, use_fast=False)
+
     model = AutoModelForSeq2SeqLM.from_pretrained(model_id).to(torch.device(device_str)).eval()
     return tok, model
 

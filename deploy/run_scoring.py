@@ -85,6 +85,7 @@ def preflight() -> None:
     """
     missing = []
     for mod, why in (("sentencepiece", "grammar correction tokenizer"),
+                     ("google.protobuf", "converting the grammar tokenizer"),
                      ("openpyxl", "writing the Excel output"),
                      ("spacy", "parsing"),
                      ("librosa", "audio features")):
@@ -147,15 +148,25 @@ def fetch_models(token: str | None) -> None:
 CODE_TARBALL = "https://github.com/PranshulMaithani/Flag-scores/archive/refs/heads/main.tar.gz"
 
 
-def ensure_code() -> None:
+def ensure_code(refresh: bool = False) -> None:
     """Make sure the voxscore package is present, fetching it if it is not.
 
     The bundle carries the code when make_bundle.py happened to sit beside it,
     but that is not guaranteed -- the bundler is meant to be a single file you
     drop next to the audio. Falls back to the public repo.
+
+    ``refresh`` re-downloads over an existing copy. Without it, updating
+    run_scoring.py alone leaves a stale voxscore/ in place, so fixes to the
+    scoring code never arrive and the same bug appears to persist after an
+    update. Use --refresh-code after pulling a new run_scoring.py.
     """
-    if (WORK / "voxscore" / "__init__.py").exists():
+    if (WORK / "voxscore" / "__init__.py").exists() and not refresh:
         return
+    if refresh:
+        import shutil as _sh
+
+        _sh.rmtree(WORK / "voxscore", ignore_errors=True)
+        log("     refreshing voxscore code from GitHub ...")
     log("     voxscore code not in the bundle; downloading from GitHub ...")
     import io
     import tarfile
@@ -278,12 +289,16 @@ def build_question_map(item_texts: dict[str, str]) -> tuple[dict, dict]:
 
 
 def score_all(limit: int | None, device: str | None, no_grammar: bool,
-              csv_path: Path | None):
+              csv_path: Path | None, rescore: bool = False):
     from voxscore.config import PipelineConfig, device_report
     from voxscore.pipeline import Pipeline
     from voxscore.utils.audio_io import load_npy_item
 
     CACHE.mkdir(parents=True, exist_ok=True)
+    if rescore:
+        for old in CACHE.glob("*.json"):
+            old.unlink()
+        log("     cleared cached scores; every item will be re-scored")
 
     item_texts = read_upload_csv(csv_path) if csv_path and csv_path.exists() else {}
     questions, item_to_qkey = build_question_map(item_texts)
@@ -426,10 +441,18 @@ def main() -> int:
     ap.add_argument("--zip", default=None, help="bundle path (default: find one here)")
     ap.add_argument("--out", default="voxscore_results.xlsx")
     ap.add_argument("--limit", type=int, default=None, help="score only the first N")
+    ap.add_argument("--rescore", action="store_true",
+                    help="discard cached per-item results and score everything "
+                         "again. Needed after a fix that changes scores, since "
+                         "cached items are otherwise reused as-is.")
     ap.add_argument("--device", default=None, help="cuda | cpu")
     ap.add_argument("--no-grammar", action="store_true",
                     help="skip grammar correction; roughly 2x faster")
     ap.add_argument("--token", default=None, help="HF token if the model repo is private")
+    ap.add_argument("--refresh-code", action="store_true",
+                    help="re-download the voxscore package, discarding the copy "
+                         "already extracted. Use this after pulling a new "
+                         "run_scoring.py, otherwise the old scoring code stays.")
     ap.add_argument("--csv", default=None,
                     help="upload.csv path (default: upload.csv beside this script)")
     args = ap.parse_args()
@@ -446,13 +469,14 @@ def main() -> int:
     sys.path.insert(0, str(WORK))          # the bundle carries the voxscore package
     os.environ.setdefault("HF_HOME", str(MODELS / "_hf"))
 
-    ensure_code()
+    ensure_code(refresh=args.refresh_code)
     fetch_models(args.token or os.environ.get("HF_TOKEN"))
     ensure_spacy_model()
     point_config_at_local_models()
 
     csv_path = Path(args.csv) if args.csv else (HERE / "upload.csv")
-    results = score_all(args.limit, args.device, args.no_grammar, csv_path)
+    results = score_all(args.limit, args.device, args.no_grammar, csv_path,
+                        rescore=args.rescore)
     if not results:
         log("nothing scored")
         return 1
