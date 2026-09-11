@@ -122,6 +122,11 @@ class ModelSpec:
     commercial_ok: bool
     purpose: str
     notes: str = ""
+    in_use: bool = True
+    """False for models that are designed for but not wired into the pipeline.
+
+    The licence audit reads this registry, so an entry that implies a dependency
+    we do not actually ship would be misleading to whoever signs it off."""
 
 
 MODELS: dict[str, ModelSpec] = {
@@ -171,14 +176,21 @@ MODELS: dict[str, ModelSpec] = {
         licence="Apache-2.0",
         commercial_ok=True,
         purpose="Second-opinion acoustic language ID",
-        notes="Model weights Apache-2.0 (verified on Hub). The VoxLingua107 training "
-              "corpus itself is CC-BY-4.0; attribution required, commercial use fine.",
+        in_use=False,
+        notes="NOT WIRED IN. The foreign-language flag uses Whisper's own windowed "
+              "posteriors plus a text channel, and reached 0% accent false positives "
+              "without a second acoustic model, so this was never added. Kept in the "
+              "registry because it is the obvious next channel if the flag needs one. "
+              "Weights Apache-2.0; VoxLingua107 corpus CC-BY-4.0.",
     ),
     "speaker": ModelSpec(
         hf_id="speechbrain/spkrec-ecapa-voxceleb",
         licence="Apache-2.0",
         commercial_ok=True,
         purpose="Speaker embeddings for the optional multi-speaker flag",
+        in_use=False,
+        notes="NOT WIRED IN. The multi-speaker flag was scoped as a nice-to-have "
+              "(client: 'you can if you want to') and not built.",
     ),
 }
 
