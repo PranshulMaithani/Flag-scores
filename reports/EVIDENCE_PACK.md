@@ -33,8 +33,10 @@ shipped model commercially licensed, ~1× realtime at 3.1 GB VRAM.
    single largest open risk and your 350-item set resolves it in one run.
 2. **Fluency against proficiency labels.** Validating it needs *graded audio*,
    which no permissively licensed corpus provides.
-3. **ASR word-error rate on your accents.** Everything downstream inherits it,
-   and we have no reference transcripts to measure against.
+3. **ASR accuracy on *spontaneous* accented speech.** Measured at 4.8% WER on
+   Indian-accented **read** speech, which is good — but real responses are
+   spontaneous and disfluent, so that figure is a floor. Filipino and
+   African-accented English are unmeasured for want of a referenced corpus.
 
 The accent-fairness result in §5 is now measured rather than pending, but at
 n = 20 per group — enough to have caught a 16.7% failure, not enough to certify
