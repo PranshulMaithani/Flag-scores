@@ -304,3 +304,27 @@ their own labels later if they ever choose to.
 4. **Accent fairness audit** — per-accent score distributions at matched proficiency,
    checking for systematic penalty. Not requested; included because brief §12 requires it
    to be true and nobody has checked whether the incumbent's scores are clean.
+
+---
+
+## As-built deltas
+
+The spec above is the design as written before implementation. Measurement changed
+several parts of it. Recorded here so the document does not drift from the code;
+full reasoning is in `JOURNAL.md`.
+
+| Spec said | As built | Why |
+|---|---|---|
+| Relevance = weighted mean of features | **anchor x engagement**, multiplicative | `specificity` and `content_novelty` are topic-blind, so an off-topic passage dense with detail scored 73/100 while the off-topic flag fired at 98. Only a product can express a disqualifying condition. |
+| `shareability` from sentence-embedding agreement | **informativeness-weighted content-lemma overlap** | The embedding version ranked the two question families backwards, twice. Bi-encoder similarity conflates form with content. |
+| `specificity` = named entities + numerals | **+ concrete low-frequency vocabulary** | Scored 0.000 on a strong answer that deliberately said "someone" and "she" rather than naming a friend. Penalising discretion would mark down exactly the fluent answers we want. |
+| Topic drift over a fixed 4 windows | **minimum window size, abstains below 75 words** | A fixed split gave ~15-word windows whose embeddings were noise; the feature read 0.50/0.00/0.50 across three responses that were all on topic. |
+| `torchaudio.functional.forced_align` | **own CTC Viterbi aligner** | No CUDA/HIP kernel, and deprecated for removal. Pinned against the torchaudio reference in tests. |
+| One shared flag threshold | **per-flag thresholds from ROC curves** | `off_topic` at 55 caught only half of genuinely mismatched answers; its curve puts it at 35. `foreign_language` needed 25. |
+| `foreign_language` text channel over the transcript | **over the acoustically suspect spans only** | The scoring transcript is forced to English, so text LID always read English and the channel could never fire. Re-transcribing the whole clip failed too: Whisper picks the majority language. |
+| Whisper timestamps for segments | **derived from forced alignment** | Segment timestamps drift by hundreds of milliseconds, which is the difference between "no pause" and "a hesitation" at a 250 ms threshold. |
+
+**The recurring lesson**, hit three separate times: *a channel that cannot measure must
+abstain, not vote.* Returning 0.0 for "unavailable" is indistinguishable from
+"measured, and fine". Every such path now collapses its weight and lets the remaining
+weights renormalise.

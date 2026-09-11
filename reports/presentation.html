@@ -1,0 +1,638 @@
+<title>Scoring Spoken Answers Without an LLM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --paper:#EDEFEA;
+  --surface:#F7F8F4;
+  --sunk:#E3E7DF;
+  --ink:#171E21;
+  --muted:#596468;
+  --hair:#C9D0C7;
+  --accent:#1F6F6B;
+  --accent-soft:#DCE9E6;
+  --signal:#B5760F;
+  --signal-soft:#F1E4CC;
+  --risk:#9E4034;
+  --risk-soft:#F2DDD9;
+  --ok:#356B4A;
+  --ok-soft:#DCEADF;
+
+  --f-display:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"Cascadia Code",Consolas,monospace;
+
+  --col:68ch;
+  --wide:1080px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#111618;
+    --surface:#171E20;
+    --sunk:#0C1113;
+    --ink:#E6EBE7;
+    --muted:#96A29F;
+    --hair:#2B3538;
+    --accent:#5FB8AF;
+    --accent-soft:#1B2E2E;
+    --signal:#D9A144;
+    --signal-soft:#2E2617;
+    --risk:#D97B6B;
+    --risk-soft:#2E1C19;
+    --ok:#6FB585;
+    --ok-soft:#16261C;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111618;
+  --surface:#171E20;
+  --sunk:#0C1113;
+  --ink:#E6EBE7;
+  --muted:#96A29F;
+  --hair:#2B3538;
+  --accent:#5FB8AF;
+  --accent-soft:#1B2E2E;
+  --signal:#D9A144;
+  --signal-soft:#2E2617;
+  --risk:#D97B6B;
+  --risk-soft:#2E1C19;
+  --ok:#6FB585;
+  --ok-soft:#16261C;
+}
+
+*{box-sizing:border-box;}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--f-body);font-size:16.5px;line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--wide);margin:0 auto;padding:0 28px;}
+.col{max-width:var(--col);}
+
+/* ---------- masthead ---------- */
+header.mast{
+  border-bottom:1px solid var(--hair);
+  background:linear-gradient(to bottom,var(--surface),var(--paper));
+}
+.mast .wrap{padding-top:56px;padding-bottom:40px;}
+.kicker{
+  font-family:var(--f-mono);font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 18px;
+}
+h1{
+  font-family:var(--f-display);font-weight:400;
+  font-size:clamp(40px,6.2vw,68px);line-height:1.02;letter-spacing:-.015em;
+  margin:0 0 20px;text-wrap:balance;max-width:20ch;
+}
+h1 em{font-style:italic;color:var(--accent);}
+.standfirst{font-size:19px;color:var(--muted);max-width:60ch;margin:0;}
+.meta{
+  display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:32px;
+  font-family:var(--f-mono);font-size:12px;color:var(--muted);
+}
+.meta b{color:var(--ink);font-weight:500;}
+
+/* ---------- sections ---------- */
+section{padding:60px 0;border-bottom:1px solid var(--hair);}
+section:last-of-type{border-bottom:none;}
+.shead{display:flex;align-items:baseline;gap:16px;margin-bottom:10px;}
+.snum{
+  font-family:var(--f-mono);font-size:12px;color:var(--accent);
+  letter-spacing:.1em;flex:none;padding-top:6px;
+}
+h2{
+  font-family:var(--f-display);font-weight:400;font-size:clamp(26px,3.4vw,36px);
+  line-height:1.12;letter-spacing:-.01em;margin:0;text-wrap:balance;
+}
+h3{
+  font-size:14px;font-weight:600;letter-spacing:.02em;margin:34px 0 10px;
+}
+p{margin:0 0 16px;}
+.lede{font-size:18px;}
+strong{font-weight:600;}
+code,.mono{font-family:var(--f-mono);font-size:.9em;}
+code{background:var(--sunk);padding:1px 5px;border-radius:3px;}
+.quiet{color:var(--muted);}
+
+/* ---------- pull ---------- */
+.pull{
+  margin:30px 0;padding:22px 26px;background:var(--surface);
+  border-left:3px solid var(--accent);
+  font-family:var(--f-display);font-size:22px;line-height:1.34;
+}
+.pull.warn{border-left-color:var(--signal);}
+
+/* ---------- three ideal answers ---------- */
+.ideals{
+  display:grid;gap:14px;margin:26px 0 10px;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+}
+.ideal{
+  background:var(--surface);border:1px solid var(--hair);
+  padding:16px 18px;display:flex;flex-direction:column;gap:9px;
+}
+.ideal .tag{
+  font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);
+}
+.ideal p{margin:0;font-size:14.5px;line-height:1.5;}
+.ideal .where{font-family:var(--f-mono);font-size:12px;color:var(--accent);}
+
+/* ---------- chart ---------- */
+figure{margin:32px 0 0;}
+.chartbox{
+  background:var(--surface);border:1px solid var(--hair);
+  padding:22px 20px 14px;overflow-x:auto;
+}
+svg{display:block;width:100%;height:auto;min-width:560px;}
+figcaption{
+  margin-top:14px;font-size:13.5px;color:var(--muted);max-width:74ch;
+}
+.legend{
+  display:flex;gap:22px;flex-wrap:wrap;margin:0 0 6px;
+  font-family:var(--f-mono);font-size:12px;
+}
+.legend span{display:flex;align-items:center;gap:7px;}
+.sw{width:20px;height:0;border-top-width:2.5px;border-top-style:solid;}
+
+/* ---------- tables ---------- */
+.tablebox{overflow-x:auto;margin:24px 0;}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px;}
+th,td{text-align:left;padding:9px 14px 9px 0;border-bottom:1px solid var(--hair);vertical-align:top;}
+th{
+  font-family:var(--f-mono);font-size:11px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted);font-weight:500;
+  border-bottom-color:var(--ink);
+}
+td.num,th.num{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;padding-right:22px;}
+td.big{font-size:16px;font-weight:600;color:var(--accent);}
+
+/* ---------- verdict pills ---------- */
+.pill{
+  display:inline-block;font-family:var(--f-mono);font-size:10.5px;
+  letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;
+  border-radius:2px;white-space:nowrap;
+}
+.pill.ok{background:var(--ok-soft);color:var(--ok);}
+.pill.part{background:var(--signal-soft);color:var(--signal);}
+.pill.open{background:var(--risk-soft);color:var(--risk);}
+
+/* ---------- score anatomy ---------- */
+.anatomy{
+  display:flex;align-items:stretch;gap:0;flex-wrap:wrap;
+  margin:26px 0;font-family:var(--f-mono);font-size:13px;
+}
+.anat{
+  flex:1 1 190px;padding:16px 18px;background:var(--surface);
+  border:1px solid var(--hair);
+}
+.anat .t{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.anat .v{font-family:var(--f-display);font-size:26px;color:var(--accent);line-height:1.1;}
+.anat .d{margin-top:8px;font-family:var(--f-body);font-size:13px;color:var(--muted);line-height:1.45;}
+.op{
+  flex:none;display:flex;align-items:center;justify-content:center;
+  padding:0 12px;font-family:var(--f-display);font-size:26px;color:var(--muted);
+}
+
+/* ---------- asks ---------- */
+.asks{display:grid;gap:2px;margin-top:24px;}
+.ask{
+  display:grid;grid-template-columns:34px 1fr;gap:16px;
+  padding:18px 20px;background:var(--surface);border:1px solid var(--hair);
+}
+.ask .n{font-family:var(--f-mono);font-size:12px;color:var(--accent);padding-top:3px;}
+.ask h4{margin:0 0 6px;font-size:15px;font-weight:600;}
+.ask p{margin:0;font-size:14.5px;color:var(--muted);}
+
+footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--muted);}
+
+@media (max-width:640px){
+  body{font-size:16px;}
+  .wrap{padding:0 20px;}
+  .shead{flex-direction:column;gap:4px;}
+  .snum{padding-top:0;}
+  .op{padding:6px 0;}
+}
+@media (prefers-reduced-motion:no-preference){
+  .dose{stroke-dasharray:1400;stroke-dashoffset:0;}
+}
+</style>
+
+<header class="mast">
+  <div class="wrap">
+    <p class="kicker">voxscore v0.1.0 · research prototype · 11 Sep 2026</p>
+    <h1>Scoring spoken answers <em>without</em> an LLM</h1>
+    <p class="standfirst">
+      A self-hosted replacement for the assessment scoring vendor. Four scores, four
+      cheating flags, every number traceable to a named feature. Built and measured
+      against public data only — no candidate data was used.
+    </p>
+    <div class="meta">
+      <span><b>3.1 GB</b> peak VRAM (budget 16)</span>
+      <span><b>~1×</b> realtime, all models</span>
+      <span><b>91</b> tests</span>
+      <span><b>84</b> features per response</span>
+      <span><b>0</b> LLM calls</span>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="shead"><span class="snum">01</span><h2>Why the vendor scores 0.40 on relevance</h2></div>
+    <div class="col">
+      <p class="lede">
+        The incumbent manages about 0.60 correlation on grammar, lexical and fluency,
+        but only <strong>0.40 on relevance</strong>. That asymmetry is not random, and
+        it is the opening.
+      </p>
+      <p>
+        Grammar, lexical and fluency are properties of the response alone. Relevance is
+        the only category that requires reasoning about the prompt — and the obvious
+        way to do that is nearly uncorrelated with relevance on personal-narrative
+        questions.
+      </p>
+      <p>
+        Your own ideal answers show why. Three model responses to
+        <em>“Share how you celebrated your most recent birthday.”</em>
+      </p>
+    </div>
+
+    <div class="ideals">
+      <div class="ideal">
+        <span class="tag">Ideal answer 1</span>
+        <p>“…dinner with my family at home. My mother made one of my favorite meals, and my brother insisted on buying a cake that looked much better than it tasted.”</p>
+        <span class="where">family · home · a bad cake</span>
+      </div>
+      <div class="ideal">
+        <span class="tag">Ideal answer 2</span>
+        <p>“…one friend secretly organized a small evening at a café I really like. When I walked in and saw everyone there, I was genuinely surprised.”</p>
+        <span class="where">friends · a café · a surprise</span>
+      </div>
+      <div class="ideal">
+        <span class="tag">Ideal answer 3</span>
+        <p>“…had a slow morning, got coffee, wandered around a bookshop, then met my sister for dinner. She gave me a notebook filled with little messages.”</p>
+        <span class="where">alone · a bookshop · a notebook</span>
+      </div>
+    </div>
+
+    <div class="col">
+      <p class="quiet" style="font-size:14.5px;margin-top:18px;">
+        Content overlap between them is close to zero. All three are perfect answers.
+      </p>
+      <div class="pull">
+        Any system scoring relevance by resemblance to an ideal answer is measuring
+        <em>whose story it is</em>.
+      </div>
+      <p>
+        We measured the consequence. Against this rubric, a response that does nothing
+        but <strong>restate the prompt</strong> scored highest of six on raw question
+        similarity — above two genuine answers. A contentless vague answer matched a
+        real one on ideal-answer similarity.
+      </p>
+      <div class="pull warn">
+        Similarity-based relevance rewards restating the question and saying nothing at
+        length. That alone is enough to produce 0.40.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="shead"><span class="snum">02</span><h2>So we score the question, not the answer key</h2></div>
+    <div class="col">
+      <p>
+        A rubric is derived per question, with no labels and no classifier. Required
+        elements come from the question’s own grammar. Required <em>moves</em> come from
+        whatever <strong>two of the three</strong> ideal answers agree on after names,
+        places and dates are masked out — two independent answers agreeing makes
+        something a requirement; one mentioning it is personal detail.
+      </p>
+      <p>
+        How far to trust content matching is decided per question by measuring how much
+        the three ideal answers agree with each other. High for opinion prompts, where
+        model answers converge on the same arguments. Near zero for personal prompts,
+        where they share only structure.
+      </p>
+      <p>
+        Relevance is then a product, not an average:
+      </p>
+    </div>
+
+    <div class="anatomy">
+      <div class="anat">
+        <div class="t">Anchor</div>
+        <div class="v">0.42</div>
+        <div class="d">Is this about the question at all? Element coverage, question similarity, drift.</div>
+      </div>
+      <div class="op">×</div>
+      <div class="anat">
+        <div class="t">Engagement</div>
+        <div class="v">0.97</div>
+        <div class="d">Is it a substantive answer? Concrete detail, new content, structural fit.</div>
+      </div>
+      <div class="op">=</div>
+      <div class="anat">
+        <div class="t">Relevance</div>
+        <div class="v">8.7</div>
+        <div class="d">Multiplying lets one condition disqualify. Averaging cannot.</div>
+      </div>
+    </div>
+
+    <div class="col">
+      <p class="quiet" style="font-size:14.5px;">
+        Those are real numbers from a test response: fluent, specific, detailed English
+        prose — about Victorian art criticism, paired with the birthday question. Under
+        an additive model it scored <strong>73/100</strong> while the off-topic flag
+        fired at 98. Multiplying brought it to 8.7.
+      </p>
+      <h3>The bias trap it survives</h3>
+      <p>
+        All three birthday ideal answers describe a <em>low-key</em> celebration. We
+        wrote an adversarial response describing a large, loud party — equally valid,
+        opposite in kind. It scored <strong>at or above</strong> the quiet one on every
+        relevance feature. A content-matching system would have marked it down for being
+        different. It is now a permanent regression test.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="shead"><span class="snum">03</span><h2>The foreign-language flag, calibrated by dose</h2></div>
+    <div class="col">
+      <p>
+        Rather than a positive/negative set, controlled proportions of Hindi, Tamil,
+        Tagalog, Swahili and Yoruba were spliced into English responses — level-matched
+        and cross-faded, so the detector cannot cheat by hearing the splice. The result
+        is a curve that says what a threshold <em>means</em>.
+      </p>
+    </div>
+
+    <figure>
+      <div class="chartbox">
+        <div class="legend">
+          <span><i class="sw" style="border-top-color:var(--risk)"></i>before fix</span>
+          <span><i class="sw" style="border-top-color:var(--accent)"></i>after fix</span>
+          <span><i class="sw" style="border-top-color:var(--signal);border-top-style:dashed"></i>threshold 25</span>
+        </div>
+        <svg viewBox="0 0 720 372" role="img" aria-label="Flag score against true proportion of non-English speech, before and after the fix">
+          <!-- grid -->
+          <g stroke="var(--hair)" stroke-width="1">
+            <line x1="70" y1="320" x2="690" y2="320"/>
+            <line x1="70" y1="250" x2="690" y2="250"/>
+            <line x1="70" y1="180" x2="690" y2="180"/>
+            <line x1="70" y1="110" x2="690" y2="110"/>
+            <line x1="70" y1="40"  x2="690" y2="40"/>
+          </g>
+          <!-- y labels -->
+          <g fill="var(--muted)" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="end">
+            <text x="58" y="324">0</text>
+            <text x="58" y="254">25</text>
+            <text x="58" y="184">50</text>
+            <text x="58" y="114">75</text>
+            <text x="58" y="44">100</text>
+          </g>
+          <!-- x labels -->
+          <g fill="var(--muted)" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">
+            <text x="70"  y="342">0%</text>
+            <text x="225" y="342">25%</text>
+            <text x="380" y="342">50%</text>
+            <text x="535" y="342">75%</text>
+            <text x="690" y="342">100%</text>
+          </g>
+          <text x="380" y="364" fill="var(--muted)" font-family="IBM Plex Sans, sans-serif" font-size="12" text-anchor="middle">true proportion of the response spoken in another language</text>
+          <text x="14" y="182" fill="var(--muted)" font-family="IBM Plex Sans, sans-serif" font-size="12" text-anchor="middle" transform="rotate(-90 14 182)">flag score</text>
+
+          <!-- threshold -->
+          <line x1="70" y1="250" x2="690" y2="250" stroke="var(--signal)" stroke-width="1.5" stroke-dasharray="5 4"/>
+
+          <!-- before -->
+          <polyline class="dose" fill="none" stroke="var(--risk)" stroke-width="2.5"
+            stroke-linejoin="round" stroke-linecap="round"
+            points="70,320 101,313 132,308 194,259 287,230 380,208 535,189 690,141"/>
+          <g fill="var(--risk)">
+            <circle cx="690" cy="141" r="4"/><circle cx="535" cy="189" r="3"/>
+            <circle cx="380" cy="208" r="3"/><circle cx="194" cy="259" r="3"/>
+          </g>
+          <text x="676" y="130" fill="var(--risk)" font-family="IBM Plex Mono, monospace" font-size="12" text-anchor="end">63.8</text>
+
+          <!-- after -->
+          <polyline class="dose" fill="none" stroke="var(--accent)" stroke-width="2.5"
+            stroke-linejoin="round" stroke-linecap="round"
+            points="70,320 225,172 380,104 535,89 690,64"/>
+          <g fill="var(--accent)">
+            <circle cx="690" cy="64" r="4"/><circle cx="535" cy="89" r="3"/>
+            <circle cx="380" cy="104" r="3"/><circle cx="225" cy="172" r="3"/>
+            <circle cx="70" cy="320" r="3"/>
+          </g>
+          <text x="676" y="53" fill="var(--accent)" font-family="IBM Plex Mono, monospace" font-size="12" text-anchor="end">91.6</text>
+        </svg>
+      </div>
+      <figcaption>
+        Before the fix, a response spoken <em>entirely</em> in Hindi scored 63.8, and a
+        75%-Hindi response scored 46.8 — under the then-default threshold of 55. The
+        flag would have missed three quarters of an answer in another language.
+      </figcaption>
+    </figure>
+
+    <div class="col">
+      <h3>Why it was capped</h3>
+      <p>
+        The scoring transcript is forced to English on purpose, so a Hindi stretch comes
+        out visibly broken rather than as clean Hindi the grammar and lexical modules
+        would happily score as an answer. But the flag then ran its <em>text</em>
+        language detector over that same forced transcript — which always reads as
+        English. That channel held 30% of the weight and voted “not foreign” on every
+        single item.
+      </p>
+      <p>
+        The first fix made it worse. Re-transcribing the whole clip with automatic
+        language detection meant Whisper picked the <em>majority</em> language: on a
+        25%-Hindi response it chose English, correctly, and the score fell from 35.2 to
+        25.6. The corroborating channel was arguing against the evidence it existed to
+        corroborate.
+      </p>
+      <div class="pull">
+        Now it transcribes only the spans that <em>sounded</em> foreign, and asks
+        whether they actually are.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="shead"><span class="snum">04</span><h2>What is measured, and what is not</h2></div>
+    <div class="col">
+      <p>
+        Nothing is fitted to your labels — the default scorer is a transparent scorecard
+        that cannot overfit. These are floors, not optimistic estimates.
+      </p>
+    </div>
+
+    <div class="tablebox">
+      <table>
+        <thead>
+          <tr>
+            <th>Claim</th><th class="num">Result</th><th>Evidence</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Grammar ranks proficiency</td><td class="num big">ρ 0.899</td>
+            <td>18 graded responses, 94.4% pairwise</td><td><span class="pill ok">measured</span></td>
+          </tr>
+          <tr>
+            <td>Lexical ranks proficiency</td><td class="num big">ρ 0.856</td>
+            <td>same fixture, 94.4% pairwise</td><td><span class="pill ok">measured</span></td>
+          </tr>
+          <tr>
+            <td>Prompt-read detection</td><td class="num big">AUC 1.000</td>
+            <td>36 labelled pairs, 0% false positives</td><td><span class="pill ok">measured</span></td>
+          </tr>
+          <tr>
+            <td>Repetition detection</td><td class="num big">AUC 1.000</td>
+            <td>0% false positives; stuttering never flagged</td><td><span class="pill ok">measured</span></td>
+          </tr>
+          <tr>
+            <td>Off-topic detection</td><td class="num big">AUC 1.000</td>
+            <td>threshold 35, not 55 — set from the curve</td><td><span class="pill ok">measured</span></td>
+          </tr>
+          <tr>
+            <td>No false alarms on native English</td><td class="num big">0.0%</td>
+            <td>foreign-language FPR at every threshold tested</td><td><span class="pill ok">measured</span></td>
+          </tr>
+          <tr>
+            <td>Brief code-switching not punished</td><td class="num big">0.0</td>
+            <td>1–2 foreign fragments, 1.6–3.1% of audio</td><td><span class="pill ok">measured</span></td>
+          </tr>
+          <tr>
+            <td>Foreign-language FPR on <em>accented</em> English</td><td class="num">—</td>
+            <td>the number that decides deployability</td><td><span class="pill part">in progress</span></td>
+          </tr>
+          <tr>
+            <td>Fine-grained relevance ranking</td><td class="num">—</td>
+            <td>on-topic vs off-topic is perfect; good vs mediocre is untested</td>
+            <td><span class="pill open">needs your 350</span></td>
+          </tr>
+          <tr>
+            <td>Fluency against proficiency labels</td><td class="num">—</td>
+            <td>needs graded <em>audio</em>; no open corpus has it</td>
+            <td><span class="pill open">blocked</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col">
+      <p class="quiet" style="font-size:14.5px;">
+        The relevance gap is the honest headline. We can show the system separates
+        on-topic from off-topic essentially perfectly. We cannot yet show it separates a
+        <em>good</em> on-topic answer from a mediocre one — and that is what a 0–5
+        relevance label encodes. One run against your held-out set settles it.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="shead"><span class="snum">05</span><h2>Seven bugs, none of which crashed</h2></div>
+    <div class="col">
+      <p>
+        Every defect found during development produced <em>plausible numbers in a
+        believable range</em>. They are listed because how they were caught transfers
+        better than the fixes do.
+      </p>
+    </div>
+
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>Defect</th><th>What it would have shipped</th></tr></thead>
+        <tbody>
+          <tr><td>All six “lower is better” curves double-negated</td>
+              <td>Grammar rewarded <strong>more</strong> errors; fluency rewarded filled pauses; lexical rewarded commoner vocabulary</td></tr>
+          <tr><td>Relevance averaged topic-blind features</td>
+              <td>An off-topic passage scored 73/100 while the off-topic flag fired at 98</td></tr>
+          <tr><td><code>output_scores=True</code> silently ignored by the library</td>
+              <td>ASR confidence would have been exactly 0.0 for every item, forever</td></tr>
+          <tr><td><code>generate</code> strips the forced decoder prefix</td>
+              <td>“Confidence” of a perfect transcript (−8.2) barely beat <em>silent audio</em> (−7.8)</td></tr>
+          <tr><td>Long-form confidence scored against one 30 s window</td>
+              <td>Clean English tripped the “not English” signal</td></tr>
+          <tr><td>Foreign-language text channel could never fire</td>
+              <td>100% Hindi capped at 63.8</td></tr>
+          <tr><td>Abstention scored as a pass — three separate places</td>
+              <td>Responses too short to measure received full marks</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col">
+      <h3>Two things that worked better than assertions</h3>
+      <p>
+        <strong>Cross-checking independent outputs.</strong> The relevance bug surfaced
+        because a <em>flag</em> said off-topic while a <em>score</em> said relevant.
+        Neither number looked wrong on its own.
+      </p>
+      <p>
+        <strong>Controls that must score badly.</strong> The confidence bug was caught by
+        scoring silent audio and finding it nearly matched a perfect transcription.
+      </p>
+      <p>
+        And one class hit three times, now named: <strong>a channel that cannot measure
+        must abstain, not vote.</strong> Returning zero for “unavailable” reads
+        identically to “measured, and fine”.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="shead"><span class="snum">06</span><h2>What would move this fastest</h2></div>
+    <div class="asks">
+      <div class="ask">
+        <span class="n">01</span>
+        <div>
+          <h4>The Ideal Answers sheet as a file</h4>
+          <p>Only the birthday answers were legible in the screenshots. Every other question currently falls back to question-only features, which is measurably weaker. Highest-value single item.</p>
+        </div>
+      </div>
+      <div class="ask">
+        <span class="n">02</span>
+        <div>
+          <h4>A Hugging Face token, and accept the Svarah terms</h4>
+          <p>Unblocks the accented-English fairness audit — the one result standing between the foreign-language flag and deployment.</p>
+        </div>
+      </div>
+      <div class="ask">
+        <span class="n">03</span>
+        <div>
+          <h4>One validation run against your 350</h4>
+          <p>Settles fine-grained relevance, and reveals whether your relevance labels carry a proficiency halo. If they do, that is a weighting change, not a redesign.</p>
+        </div>
+      </div>
+      <div class="ask">
+        <span class="n">04</span>
+        <div>
+          <h4>Legal sign-off on the licence audit</h4>
+          <p>Generated live from the model hub. Every shipped model is Apache-2.0 or MIT. Note that every competitive grammar-correction model is non-commercial — grammar’s ceiling is set by licensing, not method.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    voxscore v0.1.0 · Whisper large-v3 · bge-m3 · DeBERTa-v3 MNLI · gec-t5-small · all Apache-2.0 or MIT<br>
+    No candidate data was used in development. All evaluation on FLEURS (CC-BY-4.0),
+    LibriSpeech, and authored fixtures.
+  </div>
+</footer>
