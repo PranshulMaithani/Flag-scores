@@ -1,0 +1,70 @@
+{
+  "ablation": {
+    "rows": [
+      {
+        "response": "good (quiet, matches ideal style)",
+        "good": true,
+        "rel_full": 79.08950034640178,
+        "rel_qonly": 81.44562436626148,
+        "off_full": 15.554962158203123,
+        "off_qonly": 15.554962158203123
+      },
+      {
+        "response": "good (BIG party - bias trap)",
+        "good": true,
+        "rel_full": 83.14163287143926,
+        "rel_qonly": 93.92020763495029,
+        "off_full": 15.0,
+        "off_qonly": 15.0
+      },
+      {
+        "response": "off-topic (answers a different question)",
+        "good": false,
+        "rel_full": 21.627041831720973,
+        "rel_qonly": 24.409157624989827,
+        "off_full": 63.38354873657226,
+        "off_qonly": 63.38354873657226
+      },
+      {
+        "response": "prompt echo (fills time restating the question)",
+        "good": false,
+        "rel_full": 59.556556603293174,
+        "rel_qonly": 68.26126126126125,
+        "off_full": 15.0,
+        "off_qonly": 15.0
+      },
+      {
+        "response": "vague / no specifics",
+        "good": false,
+        "rel_full": 56.73808210895548,
+        "rel_qonly": 54.15036023901051,
+        "off_full": 15.0,
+        "off_qonly": 15.0
+      },
+      {
+        "response": "starts on topic then drifts away",
+        "good": false,
+        "rel_full": 46.72278275000863,
+        "rel_qonly": 49.89111570542005,
+        "off_full": 42.56055998802184,
+        "off_qonly": 42.56055998802184
+      },
+      {
+        "response": "repetitive padding",
+        "good": false,
+        "rel_full": 35.48928233542652,
+        "rel_qonly": 37.291683408180155,
+        "off_full": 24.30939602851867,
+        "off_qonly": 24.30939602851867
+      }
+    ],
+    "separation_full": 37.08881748303956,
+    "separation_qonly": 40.88220035283353
+  },
+  "wer": {
+    "n": 38,
+    "corpus_wer": 0.04770992366412214,
+    "median": 0.0,
+    "p90": 0.20666666666666678
+  }
+}

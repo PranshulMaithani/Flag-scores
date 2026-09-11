@@ -298,9 +298,16 @@ handles the L2 error types that matter and leaves correct sentences untouched, b
 if legal will clear a non-commercial model for **internal benchmarking only**,
 quantifying that gap is worth doing.
 
-**3. ASR accuracy on your accents is unmeasured.** Everything downstream inherits
-it. We have no transcripts to compute WER against, and no permissively licensed
-corpus of Indian/Filipino/African-accented English with references.
+**3. ASR accuracy on accented English — now measured, and it is fine.**
+Word-error rate on Indian-accented English (Svarah, n=38 with references):
+**4.8% corpus WER, 0.0% median per utterance**, only 1 of 38 utterances above
+30%. The transcription layer is not the bottleneck.
+
+*Caveat:* Svarah is **read** speech — clean, well-formed sentences. Real
+responses are spontaneous, disfluent, and recorded on candidate hardware, so
+4.8% is a floor rather than an expectation. What it does establish is that the
+accent itself is not the problem. Filipino and African-accented English remain
+unmeasured for want of a referenced corpus.
 
 **4. Length confounds the lexical score.** Responses cap at 60 s (~100–150 words)
 and most diversity metrics are unstable below ~100 tokens. MTLD is used because it
@@ -313,10 +320,14 @@ low-confidence rather than scored as if reliable.
 
 | | Why it matters |
 |---|---|
-| **The Ideal Answers sheet as CSV** | Only the birthday answers were legible in the screenshots. Every other question currently falls back to question-only features, which is measurably weaker. This is the highest-value single item. |
-| **HF token + Svarah / Common Voice terms accepted** | Unblocks the accented-English fairness audit — the one result standing between the foreign-language flag and deployment. |
-| **One validation run against your 350** | Resolves the fine-grained relevance question, and tells us whether your relevance labels carry a proficiency halo. |
+| **A way to get the pipeline onto the machine holding your data** | Now the only hard blocker. Code plus model weights is roughly 5 GB; how that reaches an offline machine determines how we package it. |
+| **One validation run against your 350** | Resolves the fine-grained relevance question, and tells us whether your relevance labels carry a proficiency halo. Send back `features.csv` plus your labels, or just the per-category correlations. |
 | **Legal sign-off on `reports/LICENCE_AUDIT.md`** | Generated live from the Hub; every shipped model is Apache-2.0 or MIT. |
+| **The Ideal Answers sheet** *(downgraded)* | We measured what these buy: on your birthday question, **nothing** — question-only scoring separated genuine from gaming responses slightly *better* (40.9 vs 37.1). We had called this the highest-value item; that was wrong. It is still worth sending, but only to test whether the eight **opinion** questions behave differently, where content should genuinely be reusable. |
+
+**You do not need to author new ideal answers.** You already have three per
+question, and the ablation says the method does not depend on them for
+personal-narrative prompts.
 
 ---
 

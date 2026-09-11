@@ -588,3 +588,66 @@ response scored **at or above** the quiet one on every relevance feature
 (`element_coverage` 0.781 vs 0.694, `specificity` 5.48 vs 2.86). Entity masking plus
 coverage-based matching means a truthful answer that differs in kind from the model
 answers is not penalised. Worth keeping as a permanent regression test.
+
+
+---
+
+## 2026-09-11 — Day 0 (cont.): two measurements that corrected me
+
+The client asked whether the method requires them to author ideal answers. That
+deserved a measurement rather than an opinion, and the measurement went against what I
+had been telling them.
+
+### Ablation: the ideal answers buy nothing on a personal-narrative question
+Every probe response scored twice against the same question — once with the full rubric
+built from the three real ideal answers, once with a **question-only** rubric — so the
+difference is attributable to the ideal answers alone.
+
+| response | relevance, full rubric | relevance, question-only |
+|---|---|---|
+| good (quiet) | 79.1 | 81.4 |
+| good (big party) | 83.1 | 93.9 |
+| off-topic | 21.6 | 24.4 |
+| prompt echo | 59.6 | 68.3 |
+| vague | 56.7 | 54.2 |
+| drifts off topic | 46.7 | 49.9 |
+| repetitive padding | 35.5 | 37.3 |
+
+**Separation between genuine and gaming responses: 37.1 with ideal answers, 40.9
+without.** The question-only rubric is *better* by 3.8 points. The `off_topic` flag
+scored identically under both.
+
+I had told the client the Ideal Answers sheet was "the highest-value single item" they
+could send. On this evidence that was wrong, and I have said so rather than quietly
+reordering the list.
+
+**Why it is not surprising in hindsight.** `shareability` for the birthday question
+measures 0.066, and the scorer is built to down-weight content matching in proportion to
+it (ADR-007). The mechanism is working exactly as designed — it looked at three ideal
+answers, concluded their content was not reusable, and declined to use it. The features
+that survive (`element_coverage`, `specificity`, `content_novelty`) all derive from the
+question and the response.
+
+**What the test does not establish.** Only one question was testable, because it is the
+only one whose ideal answers were legible. It is a *personal* prompt, where the whole
+argument predicted low shareability. The eight **opinion** questions are where content
+should be genuinely reusable and where ideal answers should earn their place. That
+remains untested, and is now the only reason to want the sheet.
+
+### ASR word-error rate on Indian-accented English
+Listed as an unmeasured gap. Svarah ships reference transcripts, so it was measurable
+all along.
+
+| | |
+|---|---|
+| corpus WER | **4.8%** |
+| median per-utterance | **0.0%** |
+| p90 per-utterance | 20.7% |
+| utterances above 30% WER | 1 of 38 |
+
+Whisper large-v3 handles Indian-accented English well, and the transcription layer is
+not the bottleneck anyone would assume it to be.
+
+**Caveat that matters:** Svarah is *read* speech — clean, well-formed sentences. Real
+responses are spontaneous, disfluent, and recorded on candidate hardware. 4.8% is a
+floor, not an expectation. It does establish that the accent itself is not the problem.
