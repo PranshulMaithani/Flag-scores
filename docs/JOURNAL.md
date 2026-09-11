@@ -864,3 +864,89 @@ flag and working.
 **The lesson: when a metric behaves differently across categories for no principled
 reason, suspect the measurement before redesigning the architecture.** The per-language
 spread was the tell, and I spent three rounds treating it as a constraint.
+
+---
+
+## 2026-09-11 — fluency validated, and accent bias measured in the scores
+
+### Fluency: the last unvalidated category, now validated
+No permissive corpus carries proficiency-labelled speech, so rather than hunt for
+labels I manufactured a known-severity variable — the same move that worked for the
+foreign-language dose-response. Real fluent native readings, degraded three ways.
+
+**A. Pause burden.** Silences of known count and length inserted at word boundaries,
+with matched room tone so the splice is not itself detectable.
+
+| injected | added | fluency | MLR | pauses/min | phonation |
+|---|---|---|---|---|---|
+| clean | 0.0 s | **75.8** | 10.0 | 18.4 | 0.59 |
+| 4 x 1.2 s | 4.8 s | 56.8 | 6.5 | 23.6 | 0.48 |
+| 8 x 1.2 s | 9.6 s | **47.2** | 4.9 | 26.7 | 0.41 |
+
+Spearman(score, -severity) = **+0.808**. The score tracks pause burden, and the
+component features move coherently rather than one of them carrying everything.
+
+**B. Pause placement — the test that mattered most.** Identical pause *count*, placed
+at clause boundaries versus mid-clause:
+
+| n pauses | at clause | mid-clause | gap | within-clause ratio |
+|---|---|---|---|---|
+| 4 | 72.5 | 64.9 | **+7.6** | 0.17 vs 0.49 |
+| 8 | 69.5 | 56.9 | **+12.6** | 0.15 vs 0.58 |
+
+`within_clause_pause_ratio` is weighted 0.15 on the claim that mid-clause pausing reads
+as word-searching. It earns it: the feature measures what it says it measures (0.15-0.17
+vs 0.49-0.58) and moves the score by 8-13 points at constant pause count. Had this come
+out flat the feature would have been decoration and should have been removed.
+
+**C. Speaking rate.** Pitch-preserved time-stretch. The scorecard uses a *plateau*, not a
+monotone curve, and the plateau holds: natural 75.8 against 66.8 at 0.6x and 56.2 at
+1.5x. Note the peak is at 0.75x (78.2), because these readers average 208 wpm — above
+the 110-180 band — so slowing them slightly moves them *into* it. That is the band
+behaving correctly, not a defect.
+
+### A fifth abstention bug, found by experiment C
+The 1.5x condition logged `forced alignment failed (only 623 frames for 683 alignment
+states)`. Alignment fails when audio is short relative to its transcript, and
+`fluency_features` then returns an all-zero block which the scorer read as **measured and
+terrible** rather than unmeasured.
+
+A fast speaker, transcribable but not alignable, would have been marked down for it. The
+module docstring already said "an empty result means *unavailable*, not *perfectly
+fluent*" — but only the docstring knew. Added `alignment_available`; the scoring layer
+now zeroes confidence and attaches a note telling the client to exclude the item rather
+than treat it as poor fluency.
+
+**Fifth instance of the same class.** Worth stating as a rule: *any feature block that
+can fail must carry an explicit availability flag, and the scorer must read it.* Four of
+the five were found by measurement, not by review.
+
+### Accent bias in the scores, not just the flag
+Same paragraph across all speakers, so identical words go in and any gap is accent
+penalty arriving through transcription.
+
+| group | WER | grammar | vs ceiling | lexical | gap |
+|---|---|---|---|---|---|
+| *perfect transcript* | 0% | **72.7** | — | 67.0 | — |
+| native English | 0.8% | 71.0 | -1.7 | 67.0 | — |
+| Indian | 3.2% | 68.4 | -4.3 | 66.6 | -0.4 |
+| Filipino | 1.4% | 66.6 | **-6.1** | 66.8 | -0.2 |
+| African | 6.1% | 67.4 | -5.3 | 66.8 | -0.2 |
+
+**Lexical is essentially immune** — 0.2-0.4 points on a 0-100 scale. Diversity and
+frequency statistics survive transcription error well.
+
+**Grammar loses 4-6 points for every L2 group** against 1.7 for native. Small in absolute
+terms but systematic, and it is a real penalty for saying the same words in a different
+accent.
+
+The interesting part: **the grammar gap does not track word-error rate.** Filipino has
+the lowest WER of the three L2 groups (1.4%) and the largest penalty (-6.1); African has
+four times the WER and a smaller one. So this is not "more errors, lower grammar" — the
+*kinds* of transcription error differ by accent and some produce more GEC edits than
+others. That should be understood before anyone concludes the gap is irreducible.
+
+Also fixed a flaw in this harness: the ceiling was computed from the lowercased,
+unpunctuated WER-normalised reference, which spaCy parses as one run-on sentence. It came
+out at 48.2 — *below* the 71.0 real transcripts scored. A ceiling beneath the
+measurements is not a ceiling.

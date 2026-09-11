@@ -135,6 +135,41 @@ class TestScorabilityGate:
         assert all(cs.confidence == 0.0 for cs in scores.values())
         assert all("not scorable" in " ".join(cs.notes) for cs in scores.values())
 
+    def test_failed_alignment_abstains_rather_than_scoring_low(self):
+        """A fast speaker must not be marked down for being unalignable.
+
+        Forced alignment fails when audio is short relative to its transcript.
+        Found during fluency validation: time-stretching to 1.5x made alignment
+        fail, and the all-zero feature block scored as very poor fluency rather
+        than as unmeasured. Zero pauses and zero speech rate are
+        indistinguishable from a flawless silent speaker unless the caller is
+        told the measurement did not happen.
+        """
+        from voxscore.features.fluency import fluency_features
+        from voxscore.utils.textproc import parse
+
+        failed = fluency_features([], parse("some transcribed words here"), 30.0)
+        assert failed["alignment_available"] == 0.0
+
+        scores = score_all({}, {}, failed, {},
+                           {"scorable": 1.0, "quality_confidence": 0.9})
+        fl = scores["fluency"]
+        assert fl.confidence == 0.0, "unmeasured fluency must carry zero confidence"
+        assert any("not measured" in n for n in fl.notes)
+
+    def test_successful_alignment_is_scored_normally(self):
+        from voxscore.asr.align import Word
+        from voxscore.features.fluency import fluency_features
+        from voxscore.utils.textproc import parse
+
+        words = [Word(f"w{i}", i * 0.35, i * 0.35 + 0.3, 0.9) for i in range(40)]
+        ok = fluency_features(words, parse(" ".join(f"w{i}" for i in range(40))), 15.0)
+        assert ok["alignment_available"] == 1.0
+        fl = score_all({}, {}, ok, {},
+                       {"scorable": 1.0, "quality_confidence": 0.9})["fluency"]
+        assert fl.confidence > 0
+        assert fl.score > 0
+
     def test_scorable_items_keep_their_scores(self):
         feats = {"errors_per_100_words": 1.0, "mtld": 70.0, "hdd": 0.85,
                  "mean_length_of_run": 10.0, "sim_q": 0.7,

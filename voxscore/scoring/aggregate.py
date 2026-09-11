@@ -366,9 +366,24 @@ def score_all(
                                   qconf * grammar_f.get("grammar_confidence", 1.0)),
         "lexical": score_category("lexical", lexical_f,
                                   qconf * lexical_f.get("lexical_confidence", 1.0)),
-        "fluency": score_category("fluency", fluency_f, qconf),
+        "fluency": score_category("fluency", fluency_f, qconf),  # gated below
         "relevance": score_category("relevance", relevance_f, qconf),
     }
+
+    # Forced alignment can fail on audio that is short relative to its transcript
+    # -- fast speech especially. Found during fluency validation: time-stretching
+    # to 1.5x made alignment fail on several items, and the all-zero feature block
+    # scored as very poor fluency rather than as unmeasured. A fast speaker would
+    # have been marked down for being transcribable but not alignable.
+    if fluency_f and not fluency_f.get("alignment_available", 1.0):
+        cs = out["fluency"]
+        cs.score = 0.0
+        cs.confidence = 0.0
+        cs.notes.append(
+            "fluency not measured: forced alignment failed, so pause and rate "
+            "features are unavailable. Exclude from correlation rather than "
+            "treating this as poor fluency."
+        )
 
     if not scorable:
         # Whisper hallucinates fluent text on silence and noise. Emitting a

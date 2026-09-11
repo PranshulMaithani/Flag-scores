@@ -26,7 +26,7 @@ FLUENCY_FEATURES = (
     "mean_length_of_run", "silent_pause_rate", "mean_silent_pause_dur",
     "long_pause_rate", "pause_dur_cv", "within_clause_pause_ratio",
     "filled_pause_rate", "disfluency_repeat_rate", "artic_rate_stability",
-    "speech_span_s", "n_words",
+    "speech_span_s", "n_words", "alignment_available",
 )
 
 
@@ -45,7 +45,13 @@ def fluency_features(
     """
     out = {k: 0.0 for k in FLUENCY_FEATURES}
     if not words:
+        # alignment_available stays 0.0 and the scoring layer must abstain.
+        # Returning zeros here is unavoidable, but they mean "not measured", and
+        # a zero pause rate with a zero speech rate is indistinguishable from a
+        # flawless silent speaker unless the caller is told.
         return out
+
+    out["alignment_available"] = 1.0
 
     n_words = len(words)
     out["n_words"] = float(n_words)
