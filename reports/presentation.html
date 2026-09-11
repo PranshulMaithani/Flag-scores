@@ -257,26 +257,27 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
         questions.
       </p>
       <p>
-        Your own ideal answers show why. Three model responses to
-        <em>“Share how you celebrated your most recent birthday.”</em>
+        Take any three model answers to
+        <em>“Share how you celebrated your most recent birthday.”</em> Here are three
+        we wrote — all of them good answers, none of them wrong.
       </p>
     </div>
 
     <div class="ideals">
       <div class="ideal">
-        <span class="tag">Ideal answer 1</span>
-        <p>“…dinner with my family at home. My mother made one of my favorite meals, and my brother insisted on buying a cake that looked much better than it tasted.”</p>
-        <span class="where">family · home · a bad cake</span>
+        <span class="tag">Model answer 1</span>
+        <p>“My roommate cooked pasta, which is the only thing he can cook properly, and two friends came over with a cake from the shop downstairs.”</p>
+        <span class="where">flat · pasta · a shop cake</span>
       </div>
       <div class="ideal">
-        <span class="tag">Ideal answer 2</span>
-        <p>“…one friend secretly organized a small evening at a café I really like. When I walked in and saw everyone there, I was genuinely surprised.”</p>
-        <span class="where">friends · a café · a surprise</span>
+        <span class="tag">Model answer 2</span>
+        <p>“My flight got delayed by six hours… my sister video-called and the whole family sang down the phone, which was embarrassing in a crowded terminal.”</p>
+        <span class="where">an airport · a delay · a phone call</span>
       </div>
       <div class="ideal">
-        <span class="tag">Ideal answer 3</span>
-        <p>“…had a slow morning, got coffee, wandered around a bookshop, then met my sister for dinner. She gave me a notebook filled with little messages.”</p>
-        <span class="where">alone · a bookshop · a notebook</span>
+        <span class="tag">Model answer 3</span>
+        <p>“I woke up very early, took a bus out of the city and walked for about five hours. There was almost nobody on the trail, which was exactly what I wanted.”</p>
+        <span class="where">alone · a trail · five hours</span>
       </div>
     </div>
 
@@ -289,8 +290,8 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
         <em>whose story it is</em>.
       </div>
       <p>
-        We measured the consequence. Against this rubric, a response that does nothing
-        but <strong>restate the prompt</strong> scored highest of six on raw question
+        We measured the consequence. A response that does nothing but
+        <strong>restate the prompt</strong> scored highest of six on raw question
         similarity — above two genuine answers. A contentless vague answer matched a
         real one on ideal-answer similarity.
       </p>
@@ -353,11 +354,22 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
       </p>
       <h3>The bias trap it survives</h3>
       <p>
-        All three birthday ideal answers describe a <em>low-key</em> celebration. We
-        wrote an adversarial response describing a large, loud party — equally valid,
-        opposite in kind. It scored <strong>at or above</strong> the quiet one on every
-        relevance feature. A content-matching system would have marked it down for being
-        different. It is now a permanent regression test.
+        Model answers tend to cluster — three writers asked for a good birthday answer
+        all produced something <em>low-key</em>. We wrote an adversarial response
+        describing a large, loud party: equally valid, opposite in kind. It scored
+        <strong>at or above</strong> the quiet one on every relevance feature. A
+        content-matching system would have marked it down for being different. It is now
+        a permanent regression test.
+      </p>
+      <h3>And in the end it needs none of them</h3>
+      <p>
+        The pipeline ships scoring with <strong>zero ideal answers</strong>. Routing comes
+        from the question text itself — whether the prompt demands a position and reasons,
+        or a personal narrative with concrete detail. Measured on a fixture that varies
+        relevance while holding proficiency constant, it ranks graded responses
+        <strong>perfectly</strong> (&rho; 1.000) on both a personal and an opinion prompt
+        in that configuration. Ideal answers remain an optional input that has to earn its
+        weight, and on the questions tested it did not.
       </p>
     </div>
   </div>
