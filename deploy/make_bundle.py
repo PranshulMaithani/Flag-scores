@@ -1,23 +1,35 @@
 """STEP 1 (run on YOUR laptop, where the wavs are).
 
-Turns
+Reads
 
     Audiostest/audios/<ciid>/<ciid>_<qid>.wav
 
-into two things:
+and writes three things:
 
-    voxscore_bundle.zip   anonymised .npy audio + the voxscore code. UPLOAD THIS.
-    ciid_mapping.csv      anonymous id -> real ciid. KEEP THIS. DO NOT UPLOAD.
+    voxscore_bundle.zip   anonymised .npy audio + the voxscore code   -> UPLOAD
+    upload.csv            one row per audio, with a BLANK question    -> FILL IN, THEN UPLOAD
+                          column for you to complete
+    ciid_mapping.csv      anonymous id -> real ciid                   -> KEEP LOCAL
+
+Only questions 25, 26 and 27 are packaged by default, since each candidate folder
+holds the full 1-27 set and only the last three are being scored. Change with
+--qids.
 
 Usage
 -----
     python make_bundle.py
-    python make_bundle.py --input Audiostest/audios --questions questions.csv
+    python make_bundle.py --qids 25,26,27
+    python make_bundle.py --qids all
 
-A note on what "anonymised" means here: this replaces the *identifier*. The audio
-is still a recording of someone's voice, which is biometric data. The bundle is
-safe to move between your own machines; it is not safe to treat as de-identified
-in the sense a privacy review would mean.
+What to do with upload.csv
+--------------------------
+Open it, fill the `question_text` column with the question each audio was
+answering, and upload it next to the zip. Relevance, off_topic and prompt_read
+all need that text; grammar, lexical and fluency do not.
+
+A note on "anonymised": this replaces the *identifier*. The audio is still a
+recording of someone's voice, which is biometric. Safe to move between your own
+machines; not de-identified in the sense a privacy review would mean.
 """
 
 from __future__ import annotations
@@ -34,6 +46,7 @@ import numpy as np
 
 SAMPLE_RATE = 16_000
 HERE = Path(__file__).resolve().parent
+DEFAULT_QIDS = "25,26,27"
 
 
 def find_voxscore() -> Path | None:
@@ -66,43 +79,15 @@ def load_wav(path: Path) -> tuple[np.ndarray, int]:
     return np.ascontiguousarray(audio), sr
 
 
-def load_questions(path: Path | None) -> dict:
-    """Accept either JSON ({qid: {text, ideal_answers}}) or a two-column CSV."""
-    if path is None or not path.exists():
-        return {}
-    raw = path.read_bytes()
-    for enc in ("utf-8-sig", "utf-8", "cp1252", "latin-1"):
-        try:
-            text = raw.decode(enc)
-            break
-        except UnicodeDecodeError:
-            continue
-    else:
-        return {}
-
-    if path.suffix.lower() == ".json":
-        data = json.loads(text)
-        return {str(k): v for k, v in data.items() if not str(k).startswith("_")}
-
-    out: dict = {}
-    rows = list(csv.reader(text.splitlines()))
-    if not rows:
-        return {}
-    start = 1 if rows[0] and not rows[0][0].strip().isdigit() else 0
-    for row in rows[start:]:
-        if len(row) >= 2 and row[0].strip():
-            out[row[0].strip()] = {"text": row[1].strip()}
-    return out
-
-
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--input", default="Audiostest/audios",
                     help="directory containing one folder per ciid")
-    ap.add_argument("--out", default=".", help="where to write the zip and mapping")
-    ap.add_argument("--questions", default=None,
-                    help="questions.json or a CSV of question_id,question_text")
+    ap.add_argument("--out", default=".", help="where to write the zip and csvs")
+    ap.add_argument("--qids", default=DEFAULT_QIDS,
+                    help=f"comma-separated question ids to include, or 'all' "
+                         f"(default {DEFAULT_QIDS})")
     ap.add_argument("--prefix", default="S", help="anonymous id prefix")
     ap.add_argument("--seed", type=int, default=20260911,
                     help="shuffle seed; anonymous ids do not follow ciid order")
@@ -114,10 +99,24 @@ def main() -> int:
         print(f"ERROR: {in_dir} does not exist")
         return 1
 
-    wavs = sorted(in_dir.glob("*/*.wav")) or sorted(in_dir.glob("*.wav"))
-    if not wavs:
+    keep_all = args.qids.strip().lower() == "all"
+    keep = set() if keep_all else {q.strip() for q in args.qids.split(",") if q.strip()}
+
+    all_wavs = sorted(in_dir.glob("*/*.wav")) or sorted(in_dir.glob("*.wav"))
+    if not all_wavs:
         print(f"ERROR: no .wav files under {in_dir}")
         print("       expected <input>/<ciid>/<ciid>_<qid>.wav")
+        return 1
+
+    def qid_of(w: Path) -> str:
+        return w.stem.rsplit("_", 1)[1] if "_" in w.stem else "unknown"
+
+    wavs = all_wavs if keep_all else [w for w in all_wavs if qid_of(w) in keep]
+    skipped = len(all_wavs) - len(wavs)
+    if not wavs:
+        found = sorted({qid_of(w) for w in all_wavs})
+        print(f"ERROR: no files matched --qids {args.qids}")
+        print(f"       question ids present: {found}")
         return 1
 
     ciids = sorted({(w.parent.name if w.parent != in_dir else w.stem.split("_")[0])
@@ -128,22 +127,20 @@ def main() -> int:
     random.Random(args.seed).shuffle(shuffled)
     anon = {c: f"{args.prefix}{i + 1:04d}" for i, c in enumerate(shuffled)}
 
-    questions = load_questions(Path(args.questions) if args.questions else None)
-
     staging = out_dir / "_bundle_staging"
     if staging.exists():
         shutil.rmtree(staging)
     (staging / "npy").mkdir(parents=True)
 
-    print(f"{len(wavs)} wav files across {len(ciids)} candidates\n")
+    print(f"{len(all_wavs)} wav files found, {len(wavs)} match qids "
+          f"{'all' if keep_all else sorted(keep)}"
+          + (f" ({skipped} skipped)" if skipped else ""))
+    print(f"{len(ciids)} candidates\n")
 
-    rows, qids_seen, failures = [], set(), []
+    rows, failures = [], []
     for w in wavs:
         ciid = w.parent.name if w.parent != in_dir else w.stem.split("_")[0]
-        stem = w.stem
-        # Everything after the last underscore is treated as the question id.
-        qid = stem.rsplit("_", 1)[1] if "_" in stem else "unknown"
-        qids_seen.add(qid)
+        qid = qid_of(w)
         item_id = f"{anon[ciid]}_{qid}"
 
         try:
@@ -162,23 +159,6 @@ def main() -> int:
                      "item_id": item_id, "source_file": str(w),
                      "duration_s": round(len(audio) / SAMPLE_RATE, 3)})
 
-    # --- questions -------------------------------------------------------
-    missing_q = sorted(q for q in qids_seen if q not in questions)
-    if not questions:
-        print("!" * 72)
-        print("WARNING: no questions file supplied.")
-        print("Relevance, off_topic and prompt_read all need the QUESTION TEXT.")
-        print("Without it those three outputs are meaningless; grammar, lexical")
-        print("and fluency are unaffected.")
-        print("Pass --questions questions.csv  (columns: question_id,question_text)")
-        print("!" * 72 + "\n")
-    elif missing_q:
-        print(f"WARNING: {len(missing_q)} question ids have no text: "
-              f"{missing_q[:10]}{'...' if len(missing_q) > 10 else ''}\n")
-
-    (staging / "questions.json").write_text(
-        json.dumps(questions or {}, indent=1, ensure_ascii=False), encoding="utf-8")
-
     # --- code ------------------------------------------------------------
     pkg = find_voxscore()
     if pkg is None:
@@ -196,7 +176,22 @@ def main() -> int:
                 z.write(f, f.relative_to(staging))
     shutil.rmtree(staging)
 
-    # --- mapping, deliberately OUTSIDE the zip ---------------------------
+    # --- upload.csv: goes WITH the zip, question column left for you -----
+    # Deliberately one row per audio rather than one per question id. If every
+    # candidate answered the same question 25 you can fill one row and copy it
+    # down; if the item shown varied by candidate, the per-audio row is the only
+    # thing that can express that.
+    upload_path = out_dir / "upload.csv"
+    with upload_path.open("w", newline="", encoding="utf-8") as fh:
+        wri = csv.DictWriter(fh, fieldnames=["item_id", "anon_id", "question_id",
+                                             "duration_s", "question_text"])
+        wri.writeheader()
+        for r in rows:
+            wri.writerow({"item_id": r["item_id"], "anon_id": r["anon_id"],
+                          "question_id": r["question_id"],
+                          "duration_s": r["duration_s"], "question_text": ""})
+
+    # --- mapping: deliberately NOT uploaded ------------------------------
     map_path = out_dir / "ciid_mapping.csv"
     with map_path.open("w", newline="", encoding="utf-8") as fh:
         wri = csv.DictWriter(fh, fieldnames=["anon_id", "ciid", "question_id",
@@ -204,20 +199,26 @@ def main() -> int:
         wri.writeheader()
         wri.writerows(rows)
 
-    size_gb = zip_path.stat().st_size / 1e9
+    qids_done = sorted({r["question_id"] for r in rows})
     print(f"{'items packaged':24s}{len(rows)}")
     print(f"{'candidates':24s}{len(ciids)}")
-    print(f"{'distinct questions':24s}{len(qids_seen)}")
+    print(f"{'question ids':24s}{qids_done}")
     if failures:
         print(f"{'FAILED to read':24s}{len(failures)}")
         for f, why in failures[:5]:
             print(f"    {f}: {why}")
+
     print()
-    print(f"  UPLOAD THIS      {zip_path}   ({size_gb:.2f} GB)")
-    print(f"  KEEP THIS LOCAL  {map_path}   (maps anonymous ids back to ciids)")
+    print(f"  1. FILL IN      {upload_path}")
+    print( "                  add the question text for each row "
+           "(same question id = same text, so fill one and copy down)")
+    print(f"  2. UPLOAD BOTH  {zip_path}   ({zip_path.stat().st_size / 1e9:.2f} GB)")
+    print(f"                  {upload_path}")
+    print(f"  3. KEEP LOCAL   {map_path}   (the only way back to real ciids)")
     print()
-    print("Next: copy voxscore_bundle.zip, run_scoring.py and requirements.txt to")
-    print("the scoring machine, then run   python run_scoring.py")
+    print("Then on the scoring machine, with run_scoring.py and requirements.txt:")
+    print("    pip install -r requirements.txt")
+    print("    python run_scoring.py")
     return 0
 
 

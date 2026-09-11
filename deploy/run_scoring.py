@@ -1,8 +1,9 @@
 """STEP 2 (run on the SCORING MACHINE).
 
-Put these three files in one directory and run:
+Put these four files in one directory and run:
 
     voxscore_bundle.zip      from make_bundle.py
+    upload.csv               from make_bundle.py, with question_text filled in
     run_scoring.py           this file
     requirements.txt
 
@@ -119,17 +120,100 @@ def point_config_at_local_models() -> None:
 # 3. score
 # --------------------------------------------------------------------------- #
 
-def score_all(limit: int | None, device: str | None, no_grammar: bool):
+def read_upload_csv(path: Path) -> dict[str, str]:
+    """item_id -> question_text, from the CSV you filled in.
+
+    Tolerant about encoding, because this file gets opened and saved in Excel on
+    Windows, which commonly writes UTF-8-with-BOM or cp1252.
+    """
+    raw = path.read_bytes()
+    for enc in ("utf-8-sig", "utf-8", "cp1252", "latin-1"):
+        try:
+            text = raw.decode(enc)
+            break
+        except UnicodeDecodeError:
+            continue
+    else:
+        return {}
+
+    import csv as _csv
+
+    out: dict[str, str] = {}
+    for row in _csv.DictReader(text.splitlines()):
+        iid = (row.get("item_id") or "").strip()
+        qtext = (row.get("question_text") or "").strip()
+        if iid:
+            out[iid] = qtext
+    return out
+
+
+def build_question_map(item_texts: dict[str, str]) -> tuple[dict, dict]:
+    """Turn per-item question text into what the pipeline wants.
+
+    Returns ``(questions, item_to_qkey)``. Relevance rubrics are built once per
+    question and cached, so items sharing a question must share a key. Normally
+    every row with question id 25 carries the same text and the key is just "25".
+    If the text differs between rows for one id -- legitimate if the item shown
+    varied by candidate -- the key falls back to a hash of the text, so each
+    distinct question still gets exactly one rubric rather than one per item.
+    """
+    import hashlib
+    from collections import defaultdict
+
+    by_qid: dict[str, set] = defaultdict(set)
+    for iid, qtext in item_texts.items():
+        qid = iid.rsplit("_", 1)[1] if "_" in iid else iid
+        if qtext:
+            by_qid[qid].add(qtext)
+
+    inconsistent = {q for q, texts in by_qid.items() if len(texts) > 1}
+    if inconsistent:
+        log(f"     note: question ids {sorted(inconsistent)} carry more than one "
+            f"distinct text; keying rubrics by text instead")
+
+    questions, item_to_qkey = {}, {}
+    for iid, qtext in item_texts.items():
+        if not qtext:
+            continue
+        qid = iid.rsplit("_", 1)[1] if "_" in iid else iid
+        key = (qid if qid not in inconsistent
+               else "q" + hashlib.sha1(qtext.encode("utf-8")).hexdigest()[:10])
+        questions.setdefault(key, {"text": qtext})
+        item_to_qkey[iid] = key
+    return questions, item_to_qkey
+
+
+def score_all(limit: int | None, device: str | None, no_grammar: bool,
+              csv_path: Path | None):
     from voxscore.config import PipelineConfig, device_report
     from voxscore.pipeline import Pipeline
-    from voxscore.utils.audio_io import load_npy_item, load_questions
+    from voxscore.utils.audio_io import load_npy_item
 
     CACHE.mkdir(parents=True, exist_ok=True)
-    qfile = WORK / "questions.json"
-    questions = load_questions(qfile) if qfile.exists() else {}
-    if not questions:
-        log("\n     WARNING: no question text available. Relevance, off_topic and")
-        log("     prompt_read will be meaningless. Grammar, lexical and fluency are fine.\n")
+
+    item_texts = read_upload_csv(csv_path) if csv_path and csv_path.exists() else {}
+    questions, item_to_qkey = build_question_map(item_texts)
+    filled = sum(1 for v in item_texts.values() if v)
+
+    if not csv_path or not csv_path.exists():
+        log("")
+        log("     WARNING: upload.csv not found next to this script.")
+        log("     Relevance, off_topic and prompt_read need the question text and")
+        log("     will be meaningless without it. Grammar, lexical and fluency are")
+        log("     unaffected. Fill in upload.csv and rerun to get all four.")
+        log("")
+    elif filled == 0:
+        log("")
+        log(f"     WARNING: upload.csv has {len(item_texts)} rows but the")
+        log("     question_text column is empty. Relevance, off_topic and")
+        log("     prompt_read will be meaningless until it is filled in.")
+        log("")
+    elif filled < len(item_texts):
+        log(f"     WARNING: {len(item_texts) - filled} of {len(item_texts)} rows have "
+            f"no question_text; those items lose relevance and two flags")
+    else:
+        log(f"     questions loaded for all {filled} items "
+            f"({len(questions)} distinct)")
 
     files = sorted(NPY.glob("*.npy"))[:limit]
     todo = [f for f in files if not (CACHE / f"{f.stem}.json").exists()]
@@ -144,7 +228,11 @@ def score_all(limit: int | None, device: str | None, no_grammar: bool):
         if pipe is None:
             pipe = Pipeline(PipelineConfig(device=device), load_grammar=not no_grammar)
         try:
-            item = load_npy_item(f, questions=questions)
+            item = load_npy_item(f)
+            qkey = item_to_qkey.get(f.stem)
+            if qkey:
+                item.question_id = qkey
+                item.question_text = questions[qkey]["text"]
             res = pipe.score_item(item)
             (CACHE / f"{f.stem}.json").write_text(
                 json.dumps(res.to_dict(), ensure_ascii=False), encoding="utf-8")
@@ -178,7 +266,7 @@ def write_excel(results: list[dict], path: Path) -> None:
     for r in results:
         iid = r.get("item_id", "?")
         anon = iid.rsplit("_", 1)[0] if "_" in iid else iid
-        qid = r.get("question_id") or (iid.rsplit("_", 1)[1] if "_" in iid else "")
+        qid = iid.rsplit("_", 1)[1] if "_" in iid else ""
         if r.get("error"):
             scores.append({"item_id": iid, "anon_id": anon, "question_id": qid,
                            "error": r["error"]})
@@ -248,6 +336,8 @@ def main() -> int:
     ap.add_argument("--no-grammar", action="store_true",
                     help="skip grammar correction; roughly 2x faster")
     ap.add_argument("--token", default=None, help="HF token if the model repo is private")
+    ap.add_argument("--csv", default=None,
+                    help="upload.csv path (default: upload.csv beside this script)")
     args = ap.parse_args()
 
     zips = [Path(args.zip)] if args.zip else sorted(HERE.glob("*.zip"))
@@ -264,7 +354,8 @@ def main() -> int:
     ensure_spacy_model()
     point_config_at_local_models()
 
-    results = score_all(args.limit, args.device, args.no_grammar)
+    csv_path = Path(args.csv) if args.csv else (HERE / "upload.csv")
+    results = score_all(args.limit, args.device, args.no_grammar, csv_path)
     if not results:
         log("nothing scored")
         return 1
