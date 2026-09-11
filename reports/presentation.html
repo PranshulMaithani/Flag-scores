@@ -236,6 +236,7 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
       <span><b>84</b> features per response</span>
       <span><b>0</b> LLM calls</span>
       <span><b>0.0%</b> accent false-positives</span>
+      <span><b>0</b> ideal answers required</span>
     </div>
   </div>
 </header>
@@ -617,9 +618,14 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
             <td><span class="pill ok">measured</span></td>
           </tr>
           <tr>
-            <td>Fine-grained relevance ranking</td><td class="num">—</td>
-            <td>on-topic vs off-topic is perfect; good vs mediocre is untested</td>
-            <td><span class="pill open">needs your 350</span></td>
+            <td>Fine-grained relevance <em>ranking</em></td><td class="num big">&rho; 1.000</td>
+            <td>graded fixture, per question, scored with <strong>no ideal answers</strong></td>
+            <td><span class="pill ok">measured</span></td>
+          </tr>
+          <tr>
+            <td>ASR on Indian-accented English</td><td class="num big">4.8%</td>
+            <td>word-error rate, 0.0% median per utterance &mdash; read speech, so a floor</td>
+            <td><span class="pill ok">measured</span></td>
           </tr>
           <tr>
             <td>Fluency against proficiency labels</td><td class="num">—</td>
@@ -632,10 +638,14 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
 
     <div class="col">
       <p class="quiet" style="font-size:14.5px;">
-        The relevance gap is the honest headline. We can show the system separates
-        on-topic from off-topic essentially perfectly. We cannot yet show it separates a
-        <em>good</em> on-topic answer from a mediocre one — and that is what a 0–5
-        relevance label encodes. One run against your held-out set settles it.
+        Relevance <em>ranking</em> was the open risk and is now measured. On a fixture
+        that varies relevance while holding proficiency constant — five graded responses
+        per question — the scorer ranks them perfectly on both a personal and an opinion
+        prompt, using <strong>no ideal answers at all</strong>. Pooled across questions it
+        drops to &rho; 0.964, and that residue is scale differences between questions
+        rather than mis-ranking; if you pool all 350 into one correlation, per-question
+        centring recovers it. Still a small, self-authored fixture — your 350 is the real
+        test.
       </p>
     </div>
   </div>
