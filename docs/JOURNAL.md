@@ -715,3 +715,68 @@ point gap, on identical text. Indian sits at 2.9%. That disadvantage is inherite
 grammar, lexical, fluency and relevance alike, not just by this flag, and no amount of
 threshold tuning addresses it. Reported rather than buried; it is a property of Whisper,
 not of anything we built, and it bounds what the whole system can be fair about.
+
+---
+
+## 2026-09-11 — Day 0 (end): the flag is fair, and it now under-detects
+
+Final measurements after the three-regime corroboration curve.
+
+### Fairness — solved
+All four groups reading the identical paragraph, all speaking English:
+
+| group | n | mean | max | FPR@15 | FPR@25 | **FPR@30** | FPR@45 |
+|---|---|---|---|---|---|---|---|
+| native English | 45 | 0.6 | 28.8 | 2.2% | 2.2% | **0.0%** | 0.0% |
+| Indian | 45 | 0.1 | 2.8 | 0.0% | 0.0% | **0.0%** | 0.0% |
+| Filipino | 21 | 2.8 | 28.0 | 4.8% | 4.8% | **0.0%** | 0.0% |
+| African | 45 | 3.4 | 27.8 | 8.9% | 8.9% | **0.0%** | 0.0% |
+
+Threshold 30 gives a zero false-positive rate on every group including the native
+control, and Svarah independently agrees (max 11.0, 0% at every threshold). Filipino
+went 9.5% -> 4.8% -> 0%, African 8.9% -> 8.9% -> 0%.
+
+Note the margin: every group's *maximum* sits at 27.8-28.8, just under the threshold.
+That is three points of headroom, not a comfortable separation.
+
+### Detection — regressed, and one language now fails outright
+| true % non-English | after span fix | after floor 0.10 | **final** |
+|---|---|---|---|
+| 10% | 24.0 | 14.0 | 14.0 |
+| 20% | 51.0 | 25.1 | 24.4 |
+| 35% | 62.7 | 52.8 | 52.8 |
+| 50% | 69.3 | 45.5 | 39.7 |
+| 100% | **95.1** | 73.0 | **64.6** |
+
+Per language at 100%: Hindi 64.4, Swahili 99.5, **Tamil 29.7**.
+
+**A response spoken entirely in Tamil scores 29.7 against a threshold of 30. It would
+not be flagged.** That is a detection failure, not a rounding issue, and it is the
+honest headline of this session's last change.
+
+### Where that leaves the flag
+Three successive changes each fixed a real defect and each cost detection:
+
+1. span-targeted corroboration: 100% foreign 63.8 -> 95.1 (a genuine gain)
+2. corroboration floor 0.10: fixed Filipino, cost 95.1 -> 73.0
+3. three-regime curve: fixed African, cost 73.0 -> 64.6
+
+Fairness is now good and evenly distributed. Detection is worse than two changes ago and
+is wildly uneven *by language* — Swahili 99.5, Hindi 64.4, Tamil 29.7. A single global
+threshold cannot serve that spread, which is the same objection recorded earlier about
+language-dependent sensitivity, now much sharper.
+
+**This is an unresolved trade-off, not a solved problem.** The flag as it stands is safe
+(it will not penalise accented English) and unreliable (it will miss some genuinely
+non-English responses, Tamil especially). For a review-routing flag that is the correct
+direction to fail in, but it should not be described as working.
+
+### The most likely next move
+The acoustic and text channels disagree in a *language-dependent* way, and multiplying
+them forces one global compromise. Worth trying instead: keep the channels separate and
+let the flag fire on either strong acoustic evidence **with** non-contradicting text, or
+strong text evidence alone — an OR over calibrated conditions rather than a product.
+That would let Tamil fire on its acoustic evidence without reopening the Tagalog false
+positive, since the Tagalog case has text *positively* contradicting.
+
+Not attempted: measurement stops here for the session.
