@@ -78,12 +78,21 @@ def get_dtype(device: torch.device | None = None) -> torch.dtype:
     bf16 measured at ~138 TFLOPS vs ~15.8 for fp32 on the dev GPU (8.7x), and
     unlike fp16 it needs no loss scaling. Falls back to fp32 on CPU, where bf16
     is usually slower rather than faster.
+
+    Requires compute capability 8.0 (Ampere). ``torch.cuda.is_bf16_supported()``
+    is NOT the right test: it returns True on Turing as well, because CUDA will
+    happily *emulate* bf16 there -- correctly, and far slower than the fp16 the
+    card has silicon for. A Tesla T4 (sm_75) picking bf16 off that check ran the
+    client's batch at a fraction of the speed it should have.
     """
     device = device or get_device()
     if device.type == "cpu":
         return torch.float32
     try:
-        if torch.cuda.is_bf16_supported():
+        if torch.version.hip:            # ROCm reports no useful capability
+            return torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+        major, _ = torch.cuda.get_device_capability(device)
+        if major >= 8:
             return torch.bfloat16
     except Exception:
         pass

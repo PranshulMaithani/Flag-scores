@@ -125,9 +125,12 @@ def extract(zip_path: Path) -> None:
 
 def fetch_models(token: str | None) -> None:
     marker = MODELS / ".complete"
-    if marker.exists():
+    if marker.exists() and _models_look_complete():
         log("2/4  models already downloaded - skipping")
         return
+    if marker.exists():
+        log("2/4  a downloaded model is incomplete; fetching again")
+        marker.unlink()
     log(f"2/4  downloading models from {MODEL_REPO} (about 6.4 GB, once) ...")
     from huggingface_hub import snapshot_download
 
@@ -141,8 +144,49 @@ def fetch_models(token: str | None) -> None:
         log("       export HF_TOKEN=hf_...     (Linux/Mac)")
         log("     or make the repo public in its Hugging Face settings.")
         raise SystemExit(1)
+    _prune_stray_model_files(token)
     marker.write_text("ok", encoding="utf-8")
     log("     done")
+
+
+def _models_look_complete() -> bool:
+    """Every downloaded model directory carries the config that identifies it.
+
+    The marker alone is not enough. It records that a download *finished*, not
+    that what arrived is loadable, so a bundle published with a file missing
+    stays missing across every later run -- the marker short-circuits the fetch
+    before anything can notice.
+    """
+    dirs = [d for d in MODELS.glob("*") if d.is_dir() and not d.name.startswith(".")]
+    return bool(dirs) and all((d / "config.json").exists() for d in dirs)
+
+
+def _prune_stray_model_files(token: str | None) -> None:
+    """Delete local model files the repo no longer publishes.
+
+    snapshot_download adds and updates but never removes, so a file from an
+    earlier, wrong upload outlives the fix that removed it upstream. That is not
+    cosmetic: a leftover model.safetensors sitting beside the correct
+    pytorch_model.bin is preferred by transformers, which then loads the wrong
+    weights under the right config and reports no error at all.
+    """
+    try:
+        from huggingface_hub import HfApi
+
+        remote = set(HfApi(token=token).list_repo_files(MODEL_REPO, repo_type="model"))
+    except Exception as exc:
+        log(f"     note: could not verify remote file list ({exc}); skipping cleanup")
+        return
+
+    for f in MODELS.rglob("*"):
+        if not f.is_file():
+            continue
+        rel = f.relative_to(MODELS).as_posix()
+        if rel.startswith(".") or "/." in rel:      # .complete, .cache/huggingface
+            continue
+        if rel not in remote:
+            log(f"     removing stale {rel}")
+            f.unlink(missing_ok=True)
 
 
 CODE_TARBALL = "https://github.com/PranshulMaithani/Flag-scores/archive/refs/heads/main.tar.gz"
@@ -212,13 +256,26 @@ def ensure_spacy_model(name: str = "en_core_web_sm") -> None:
 
 
 def point_config_at_local_models() -> None:
-    """Rewrite the model registry to use the downloaded copies."""
+    """Rewrite the model registry to use the downloaded copies.
+
+    A directory is only accepted when it carries the metadata that identifies
+    the model, not merely because it exists. A partially populated folder --
+    weights present, config absent -- otherwise wins over the Hub id and turns
+    a working download into a load failure with a misleading message. Falling
+    back to the Hub costs one download; pointing at a broken copy costs the
+    whole run.
+    """
     from voxscore.config import MODELS as REG
 
     for key, spec in list(REG.items()):
         local = MODELS / spec.hf_id.replace("/", "__")
-        if local.exists():
-            object.__setattr__(spec, "hf_id", str(local))
+        if not local.is_dir():
+            continue
+        if not (local / "config.json").exists():
+            log(f"     note: local copy of {spec.hf_id} is incomplete "
+                f"(no config.json); using the Hub for it")
+            continue
+        object.__setattr__(spec, "hf_id", str(local))
 
 
 # --------------------------------------------------------------------------- #

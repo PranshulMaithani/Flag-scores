@@ -950,3 +950,50 @@ Also fixed a flaw in this harness: the ceiling was computed from the lowercased,
 unpunctuated WER-normalised reference, which spaCy parses as one run-on sentence. It came
 out at 48.2 — *below* the 71.0 real transcripts scored. A ceiling beneath the
 measurements is not a ceiling.
+
+## 2026-09-12 — three bugs behind one misleading error message
+
+The scoring box reported `Couldn't instantiate the backend tokenizer ... You need
+to have sentencepiece or tiktoken installed`. Two rounds went into sentencepiece,
+which was installed the whole time, and then protobuf, which was also installed.
+The message names the packages needed for *one* of the three ways a tokenizer can
+be built, and says nothing about the other two having failed first.
+
+The real cause was in `scripts/upload_models.py`. `find_snapshot()` took
+`sorted(snapshots.glob("*"))[0]` — the alphabetically first cache directory,
+which is sorting by commit hash. `Unbabel/gec-t5_small` had two cached
+revisions: `779c…`, holding only `model.safetensors` from an interrupted fetch,
+and `c958…`, the real `main`. `7` sorts before `c`, so the published bundle's
+GEC folder contained weights and nothing else. With no `config.json` and no
+tokenizer files, `AutoTokenizer` could not identify a class to build, and the
+error it raises for that names sentencepiece.
+
+Fixed by reading `refs/main`, falling back to whichever snapshot carries a
+config. Re-uploaded; the GEC folder now has `tokenizer.json`, so the scoring
+machine needs no sentencepiece conversion at all.
+
+Two related defects shared the same shape — a local copy trusted without being
+checked:
+
+* `point_config_at_local_models()` repointed the registry at any directory that
+  `exists()`. A half-populated folder therefore beat the Hub id and converted a
+  recoverable situation into a hard failure. It now requires `config.json` and
+  otherwise leaves the Hub id in place.
+* `fetch_models()` skipped on a `.complete` marker that records only that a
+  download finished. A bundle published with a file missing stayed missing
+  forever. The marker is now checked against the directories themselves, and
+  files the repo no longer publishes are deleted — `snapshot_download` adds and
+  updates but never removes, so a stray `model.safetensors` from the bad upload
+  would have been preferred over the correct `pytorch_model.bin` beside it:
+  right config, wrong weights, no error.
+
+Separately, the same run was far slower than a T4 should be. `get_dtype()`
+selected bf16 on the strength of `torch.cuda.is_bf16_supported()`, which returns
+True on Turing because CUDA will *emulate* bf16 there — correctly, and much
+slower than the fp16 the card has silicon for. bf16 now requires compute
+capability 8.0. The dev GPU is unaffected; every pre-Ampere card is not.
+
+The common thread across all four: something reported success for a weaker claim
+than the one being relied on. A marker said a download finished, not that it was
+complete. A directory existed, but was not loadable. A capability query answered
+"can run", and was read as "runs fast".

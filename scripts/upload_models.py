@@ -47,11 +47,38 @@ def read_token() -> str | None:
 
 
 def find_snapshot(hf_id: str) -> tuple[Path, str] | None:
+    """Locate the cached snapshot for ``hf_id``, following refs/main.
+
+    Must read refs/main rather than take the first directory under snapshots/:
+    the cache keeps one directory per revision it has ever touched, including
+    partial ones fetched for a PR ref or an interrupted download. Sorting by
+    name is sorting by commit hash, which is arbitrary.
+
+    This shipped a broken bundle. Unbabel/gec-t5_small had two snapshots -- a
+    weights-only 779c... and the real c958... -- and '7' sorts before 'c', so
+    the uploaded model folder contained model.safetensors and nothing else. No
+    config.json and no tokenizer meant AutoTokenizer could not identify a class
+    to build, and the resulting "Couldn't instantiate the backend tokenizer"
+    names sentencepiece in its text, which sent the diagnosis somewhere else
+    entirely for two rounds.
+    """
     d = MODELS_CACHE / "hub" / ("models--" + hf_id.replace("/", "--"))
-    snaps = sorted((d / "snapshots").glob("*")) if (d / "snapshots").exists() else []
-    if not snaps:
+    if not (d / "snapshots").exists():
         return None
-    return snaps[0], snaps[0].name
+
+    ref = d / "refs" / "main"
+    if ref.exists():
+        rev = ref.read_text(encoding="utf-8").strip()
+        if (d / "snapshots" / rev).is_dir():
+            return d / "snapshots" / rev, rev
+
+    # No main ref: fall back to whichever snapshot is actually complete, which
+    # for every model here means it carries a config.
+    snaps = [p for p in sorted((d / "snapshots").glob("*")) if p.is_dir()]
+    for p in snaps:
+        if (p / "config.json").exists():
+            return p, p.name
+    return (snaps[0], snaps[0].name) if snaps else None
 
 
 def stage(dest: Path) -> tuple[dict, float]:
@@ -204,6 +231,12 @@ def main() -> int:
     api.upload_folder(
         folder_path=str(staging), repo_id=repo_id, repo_type="model",
         commit_message="Pinned mirror of voxscore model dependencies",
+        # Mirror the staging directory exactly. Without this, a file uploaded by
+        # an earlier, buggier run survives forever: the first upload staged the
+        # wrong gec revision, and its stray model.safetensors would have kept
+        # being preferred over the correct pytorch_model.bin beside it -- right
+        # config, wrong weights, no error.
+        delete_patterns="*",
     )
     print(f"\ndone: https://huggingface.co/{repo_id}")
     return 0
