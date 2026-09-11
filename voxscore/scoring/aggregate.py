@@ -199,33 +199,76 @@ def _relevance_anchor_card(f: dict[str, float]) -> dict[str, tuple[float, float,
 
 
 def _relevance_engagement_card(f: dict[str, float]) -> dict[str, tuple[float, float, str]]:
-    """Given that it is on topic, is it a substantive answer?"""
-    return {
-        "specificity": (
-            0.35, _curve(f.get("specificity", 0), 0.3, 5.0),
-            "concrete detail present. In probing this was the cleanest separator "
-            "of genuine answers from vague or echoed ones (2.9-5.5 vs 0.0)",
-        ),
+    """Given that it is on topic, did the candidate do what the prompt asked?
+
+    Weighted by the question's own demands rather than by anything derived from
+    ideal answers. An answer to *"Does teamwork always produce better results?"*
+    is irrelevant if it never takes a position, no matter how much concrete
+    detail it contains; an answer to *"Talk about a friend you lost touch with"*
+    is irrelevant if it contains no concrete detail, no matter how well argued.
+    Scoring both prompts on one fixed set of weights penalises whichever answer
+    correctly matched its own prompt.
+    """
+    arg = f.get("q_argumentativeness", 0.5)
+    nar = f.get("q_narrativity", 0.5)
+    expl = f.get("q_wants_explanation", 0.0)
+
+    card = {
+        # Always active: these defend against restating the prompt and against
+        # padding, which are failure modes on every question type.
         "content_novelty_vs_q": (
-            0.25, _curve(f.get("content_novelty_vs_q", 0), 0.55, 0.92),
+            0.22, _curve(f.get("content_novelty_vs_q", 0), 0.55, 0.92),
             "content beyond the question's own words; the defence against an "
             "answer that scores well by restating the prompt",
         ),
-        # Weight collapses to zero when no ideal answers exist for this question,
-        # so its absence is redistributed across the other features rather than
-        # silently subtracting a fixed amount from every response to that
-        # question. _weighted() renormalises by the surviving weights.
-        "profile_match": (
-            0.25 if f.get("profile_match", 0.0) > 0 else 0.0,
-            _curve(f.get("profile_match", 0), 0.05, 0.30),
-            "structural fit to the ideal answers as a distribution -- did the "
-            "candidate perform the speech act the prompt demanded",
-        ),
         "distinct_content_rate": (
-            0.15, _curve(f.get("distinct_content_rate", 0), 0.55, 0.95),
+            0.13, _curve(f.get("distinct_content_rate", 0), 0.55, 0.95),
             "non-repetition of content; padding scores low",
         ),
+
+        # Narrative demand: concrete detail. Keeps a floor even on opinion
+        # prompts, where examples still count for something.
+        # Range is 2.0-12.0, not 0.3-5.0. When `specificity` was widened to count
+        # concrete low-frequency vocabulary (not just named entities), its typical
+        # range moved from ~0-6 to ~4-15 and the old curve saturated almost
+        # everywhere: a vague "friendship is important" answer scored 4.55 and a
+        # fully specific one 12.61, yet the curve rated them 0.85 and 1.00. That
+        # inversion put the generic answer ABOVE the specific one on the graded
+        # fixture. Changing a feature's definition without re-tuning its curve is
+        # its own bug class.
+        "specificity": (
+            0.12 + 0.30 * nar, _curve(f.get("specificity", 0), 2.0, 12.0),
+            f"concrete detail, weighted {0.12 + 0.30 * nar:.2f} because the "
+            f"question's narrativity is {nar:.2f}",
+        ),
+
+        # Argumentative demand: a position, and reasons for it.
+        "stance_clarity": (
+            0.26 * arg, _curve(f.get("stance_clarity", 0), 0.05, 0.55),
+            f"does the answer commit to a position, weighted {0.26 * arg:.2f} "
+            f"because the question's argumentativeness is {arg:.2f}",
+        ),
+        "reason_count": (
+            0.14 * arg + 0.12 * expl, _curve(f.get("reason_count", 0), 0.0, 4.0),
+            "distinct supporting reasons; weighted up when the prompt says "
+            "'explain' or 'with reasons'",
+        ),
+        "evidence_presence": (
+            0.08 * arg, _curve(f.get("evidence_presence", 0), 0.0, 1.0),
+            "concrete examples offered in support",
+        ),
+
+        # Optional: only when ideal answers exist AND produced a usable profile.
+        # Weight collapses otherwise and _weighted() renormalises, so its absence
+        # costs nothing rather than silently subtracting from every response.
+        "profile_match": (
+            0.15 if f.get("profile_match", 0.0) > 0 else 0.0,
+            _curve(f.get("profile_match", 0), 0.05, 0.30),
+            "structural fit to the ideal answers as a distribution -- optional, "
+            "and contributes only when ideal answers are supplied",
+        ),
     }
+    return card
 
 
 def _relevance_card(f: dict[str, float]) -> dict[str, tuple[float, float, str]]:

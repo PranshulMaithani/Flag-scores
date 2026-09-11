@@ -35,6 +35,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from voxscore.features.embed import Embedder, NLI, cosine_matrix, max_align
+from voxscore.features.qtype import QuestionProfile, profile_question
 from voxscore.utils import textproc as tp
 from voxscore.utils.textproc import ParsedText, ratio
 
@@ -131,6 +132,7 @@ class RelevanceRubric:
     ideal_sentences: list[str] = field(default_factory=list)
     shareability: float = 0.0
     ref_window_sim: float = 0.0
+    qprofile: QuestionProfile | None = None
     profile: dict[str, tuple[float, float]] = field(default_factory=dict)
 
     emb_question: np.ndarray | None = None
@@ -151,6 +153,7 @@ class RelevanceRubric:
             "n_required_moves": len(self.required_moves),
             "n_question_elements": len(self.question_elements),
             "question_terms": self.question_terms,
+            "question_profile": self.qprofile.as_dict() if self.qprofile else None,
             "required_moves": self.required_moves,
             "profile": {k: [round(m, 4), round(s, 4)] for k, (m, s) in self.profile.items()},
         }
@@ -205,6 +208,7 @@ def build_rubric(
         question_text=question_text,
         question_terms=sorted(set(qp.content_lemmas)),
         question_elements=_question_elements(qp),
+        qprofile=profile_question(question_text, nlp, parsed=qp),
     )
 
     parsed_ideals = [tp.parse(a, nlp) for a in ideal_answers]
@@ -459,6 +463,17 @@ def relevance_features(
     unsupported = [l for l in response.content_lemmas if l not in q_and_ideal]
     f["unsupported_content_ratio"] = ratio(len(unsupported), max(len(response.content_lemmas), 1))
 
+    # --- what the question demands, read off the question itself ---
+    # This is the primary router. `shareability` (below) needs ideal answers to
+    # exist and to be trustworthy; the client has said theirs are AI-generated
+    # and that the pipeline must not depend on them. The prompt is always present
+    # and states the speech act it wants in its own wording.
+    qp = rubric.qprofile or profile_question(rubric.question_text)
+    f["q_argumentativeness"] = qp.argumentativeness
+    f["q_narrativity"] = qp.narrativity
+    f["q_wants_explanation"] = 1.0 if qp.wants_explanation else 0.0
+    f["q_wants_comparison"] = 1.0 if qp.wants_comparison else 0.0
+
     # --- argumentative block ---
     f.update(_argument_features(response, prof))
 
@@ -586,6 +601,7 @@ _FEATURE_NAMES = (
     "specificity", "unsupported_content_ratio", "stance_clarity", "reason_count",
     "content_novelty_vs_q", "content_word_rate", "distinct_content_rate",
     "mean_window_sim", "window_sim_vs_ref", "entity_specificity", "drift_available",
+    "q_argumentativeness", "q_narrativity", "q_wants_explanation", "q_wants_comparison",
     "counterargument_presence", "evidence_presence", "nli_move_entailment",
     "nli_self_contradiction",
 ) + tuple(f"prof_{k}" for k in PROFILE_KEYS)
