@@ -155,7 +155,7 @@ def load_npy_item(
 
     if sidecar is None:
         side_path = npy_path.with_suffix(".json")
-        sidecar = json.loads(side_path.read_text(encoding="utf-8")) if side_path.exists() else {}
+        sidecar = json.loads(read_text_tolerant(side_path)) if side_path.exists() else {}
 
     item_id = sidecar.get("item_id") or npy_path.stem
     orig_sr = sidecar.get("orig_sr") or sidecar.get("sample_rate")
@@ -200,6 +200,25 @@ def load_npy_item(
     )
 
 
+def read_text_tolerant(path: str | Path) -> str:
+    """Read a text file, coping with the encodings Windows tooling actually emits.
+
+    The client authors questions and ideal answers in Excel on Windows. Exports
+    from that path are frequently UTF-8 **with a BOM**, or cp1252 -- and their
+    real ideal answers contain characters that expose it ("a small evening at a
+    cafe I really like"). Strict UTF-8 reading raises
+    ``UnicodeDecodeError: invalid continuation byte`` on exactly those files,
+    which would look like a corrupt input rather than an encoding mismatch.
+    """
+    raw = Path(path).read_bytes()
+    for enc in ("utf-8-sig", "utf-8", "cp1252", "latin-1"):
+        try:
+            return raw.decode(enc)
+        except UnicodeDecodeError:
+            continue
+    return raw.decode("utf-8", errors="replace")
+
+
 def load_questions(path: str | Path) -> dict:
     """Load ``questions.json``.
 
@@ -207,18 +226,26 @@ def load_questions(path: str | Path) -> dict:
 
         {"q001": {"text": "...", "ideal_answers": ["...", "...", "..."]}}
     """
-    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    data = json.loads(read_text_tolerant(path))
+    data = {k: v for k, v in data.items() if not k.startswith("_")}
+
+    thin = []
     for qid, q in data.items():
         if "text" not in q:
             raise ValueError(f"question {qid!r} has no 'text'")
-        n = len(q.get("ideal_answers") or [])
-        if n < 2:
-            warnings.warn(
-                f"question {qid!r} has {n} ideal answers. The relevance rubric needs "
-                "at least 2 to separate required content from personal specifics; "
-                "it will fall back to question-only features.",
-                stacklevel=2,
-            )
+        if len(q.get("ideal_answers") or []) < 2:
+            thin.append(qid)
+
+    # One summary rather than one warning per question: with 24 questions the
+    # per-question form buried everything else in the log.
+    if thin:
+        warnings.warn(
+            f"{len(thin)} of {len(data)} questions have fewer than 2 ideal answers "
+            f"({', '.join(thin[:5])}{'...' if len(thin) > 5 else ''}). The relevance "
+            "rubric needs at least 2 to separate required content from personal "
+            "specifics; these fall back to question-only features, which is weaker.",
+            stacklevel=2,
+        )
     return data
 
 
