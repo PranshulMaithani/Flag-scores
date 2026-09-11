@@ -651,3 +651,67 @@ not the bottleneck anyone would assume it to be.
 **Caveat that matters:** Svarah is *read* speech — clean, well-formed sentences. Real
 responses are spontaneous, disfluent, and recorded on candidate hardware. 4.8% is a
 floor, not an expectation. It does establish that the accent itself is not the problem.
+
+---
+
+## 2026-09-11 — Day 0 (cont.): calibrating on one accent proved nothing
+
+Client supplied an HF token, which unlocked the **Speech Accent Archive**. That is the
+right instrument for this question and I had not had access to it: every speaker reads
+the *same* elicitation paragraph, so content is held constant and the speaker's first
+language is the only thing varying. Pulled 156 speakers across four groups — native
+English (control), Indian, Filipino, African.
+
+### The result
+All four groups are speaking English.
+
+| group | flag mean | gap vs native | FPR@30 | ASR WER | WER gap |
+|---|---|---|---|---|---|
+| native English | 0.6 | — | 0.0% | 0.8% | — |
+| **Indian** | 0.3 | -0.4 | **0.0%** | 2.9% | +2.0% |
+| **Filipino** | 6.2 | +5.6 | **9.5%** | 1.4% | +0.6% |
+| **African** | 7.5 | +6.9 | **8.9%** | 5.3% | **+4.4%** |
+
+Indian accents are genuinely fixed. The earlier work calibrated against Svarah and drove
+the Indian false-positive rate to zero, and it stayed at zero here on a different corpus.
+
+**But it did not generalise.** Filipino and African speakers still false-positive at
+around 9%, and one African speaker scored **79.5** — high enough to fire at any usable
+threshold.
+
+> **The lesson worth keeping.** Two rounds of work drove one accent group's
+> false-positive rate to 0% and I reported that as the flag being fixed. It was fixed
+> *for the group I measured*. A single-accent fairness audit on a multi-accent
+> population is close to no audit at all, and it is worse than none if it produces
+> confidence. The only reason this surfaced is that the client's token arrived and I
+> went looking for the other two groups.
+
+### Two distinct causes, both diagnosable
+Inspecting the worst cases made the mechanisms obvious.
+
+**Filipino — the language-ID model is confidently wrong.** Acoustic
+`mean_p_non_english` reached **0.94** on Tagalog-accented English; the model simply
+calls it Tagalog. But the corroborating channel was right: `text_p_non_english = 0.000`,
+and the suspect spans transcribed as *"We also need a small plastic snake and a big toy
+frog for the kids."* Flawless English.
+
+The corroboration **floor of 0.40** was the problem. Positive evidence of English could
+only damp the score, never collapse it, so those speakers still scored 23–32. Floor
+lowered to **0.10**: a suspect span that transcribes as fluent English is positive
+evidence the accent was misread, and should collapse the score.
+
+**African — the corroborating pass hallucinated.** On one speaker the unforced
+transcription emitted a run of repeated Malayalam characters. A text detector scores
+that as emphatically non-English, so the flag *corroborated* its own error and produced
+79.5 for someone reading the paragraph fluently.
+
+Added a degeneracy guard: character diversity below 12%, or any single character taking
+more than half the string, means the decoder locked up rather than found a language.
+A hallucination is not evidence, so the channel abstains.
+
+### The WER gap is a separate finding and belongs to every category
+African-accented English transcribes at **5.3% WER against 0.8% for native** — a 4.4
+point gap, on identical text. Indian sits at 2.9%. That disadvantage is inherited by
+grammar, lexical, fluency and relevance alike, not just by this flag, and no amount of
+threshold tuning addresses it. Reported rather than buried; it is a property of Whisper,
+not of anything we built, and it bounds what the whole system can be fair about.

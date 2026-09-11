@@ -201,6 +201,43 @@ class TestForeignLanguage:
     def test_no_windows_is_safe(self):
         assert foreign_language_flag([], "", 0.0).score >= 0.0
 
+    def test_english_corroboration_collapses_a_confident_wrong_lid(self):
+        """The Filipino failure mode.
+
+        Language-ID called Tagalog-accented English "Tagalog" with mean
+        p(non-English) 0.94, while the suspect spans transcribed as flawless
+        English. Positive evidence of English must collapse the score, not merely
+        damp it -- with the old 0.40 corroboration floor those speakers scored
+        23-32 and false-positived at 9.5%.
+        """
+        wins = [_Win(0.06, "tl", start=i * 2.5) for i in range(11)]
+        english_spans = ("We also need a small plastic snake and a big toy frog "
+                         "for the kids. She can scoop these things into three red bags.")
+        r = foreign_language_flag(wins, GENUINE, -0.10, transcript_auto=english_spans)
+        assert r.score < 15, f"accented English scored {r.score:.1f}"
+        assert not r.fired
+
+    def test_hallucinated_transcript_does_not_corroborate(self):
+        """The African failure mode.
+
+        The unforced pass emitted a run of repeated Malayalam characters. A text
+        detector reads that as emphatically non-English, so the flag corroborated
+        its own decoding failure and scored 79.5 for a fluent English speaker.
+        """
+        wins = [_Win(0.05, "yo", start=i * 2.5) for i in range(9)]
+        garbage = "ത" * 70
+        r = foreign_language_flag(wins, GENUINE, -0.15, transcript_auto=garbage)
+        assert r.features["auto_transcript_degenerate"] == 1.0
+        assert r.score < 60, f"hallucination still drove the score to {r.score:.1f}"
+
+    def test_genuine_foreign_transcript_still_corroborates(self):
+        """The guard must not suppress real detections."""
+        wins = [_Win(0.03, "hi", start=i * 2.5) for i in range(10)]
+        hindi = "मैंने अपना जन्मदिन घर पर मनाया था और यह बहुत अच्छा था बहुत अच्छा"
+        r = foreign_language_flag(wins, "garbled", -1.0, transcript_auto=hindi)
+        assert r.features["auto_transcript_degenerate"] == 0.0
+        assert r.score > 55, f"genuine Hindi only scored {r.score:.1f}"
+
 
 class TestEvidence:
     def test_every_flag_explains_itself(self):
