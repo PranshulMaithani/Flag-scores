@@ -379,7 +379,7 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
         <div class="legend">
           <span><i class="sw" style="border-top-color:var(--risk)"></i>before fix</span>
           <span><i class="sw" style="border-top-color:var(--accent)"></i>after fix</span>
-          <span><i class="sw" style="border-top-color:var(--signal);border-top-style:dashed"></i>threshold 25</span>
+          <span><i class="sw" style="border-top-color:var(--signal);border-top-style:dashed"></i>threshold 30</span>
         </div>
         <svg viewBox="0 0 720 372" role="img" aria-label="Flag score against true proportion of non-English speech, before and after the fix">
           <!-- grid -->
@@ -409,9 +409,9 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
           <text x="380" y="364" fill="var(--muted)" font-family="IBM Plex Sans, sans-serif" font-size="12" text-anchor="middle">true proportion of the response spoken in another language</text>
           <text x="14" y="182" fill="var(--muted)" font-family="IBM Plex Sans, sans-serif" font-size="12" text-anchor="middle" transform="rotate(-90 14 182)">flag score</text>
 
-          <!-- threshold 45 -->
-          <line x1="70" y1="194" x2="690" y2="194" stroke="var(--signal)" stroke-width="1.5" stroke-dasharray="5 4"/>
-          <text x="76" y="188" fill="var(--signal)" font-family="IBM Plex Mono, monospace" font-size="11">threshold 45</text>
+          <!-- threshold 30 -->
+          <line x1="70" y1="236" x2="690" y2="236" stroke="var(--signal)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="76" y="230" fill="var(--signal)" font-family="IBM Plex Mono, monospace" font-size="11">threshold 30 &mdash; 0% accent false-positives</text>
 
           <!-- before -->
           <polyline class="dose" fill="none" stroke="var(--risk)" stroke-width="2.5"
@@ -426,20 +426,21 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
           <!-- after -->
           <polyline class="dose" fill="none" stroke="var(--accent)" stroke-width="2.5"
             stroke-linejoin="round" stroke-linecap="round"
-            points="70,320 101,310 132,253 194,177 287,144 380,126 535,98 690,54"/>
+            points="70,320 132,281 194,238 287,172 380,156 690,63"/>
           <g fill="var(--accent)">
-            <circle cx="690" cy="54" r="4"/><circle cx="535" cy="98" r="3"/>
-            <circle cx="380" cy="126" r="3"/><circle cx="287" cy="144" r="3"/>
-            <circle cx="194" cy="177" r="3"/><circle cx="132" cy="253" r="3"/>
-            <circle cx="70" cy="320" r="3"/>
+            <circle cx="690" cy="63" r="4"/><circle cx="380" cy="156" r="3"/>
+            <circle cx="287" cy="172" r="3"/><circle cx="194" cy="238" r="3"/>
+            <circle cx="132" cy="281" r="3"/><circle cx="70" cy="320" r="3"/>
           </g>
-          <text x="676" y="43" fill="var(--accent)" font-family="IBM Plex Mono, monospace" font-size="12" text-anchor="end">95.1</text>
+          <text x="676" y="52" fill="var(--accent)" font-family="IBM Plex Mono, monospace" font-size="12" text-anchor="end">91.9</text>
         </svg>
       </div>
       <figcaption>
-        Before the fix, a response spoken <em>entirely</em> in Hindi scored 63.8, and a
-        75%-Hindi response scored 46.8 — under the then-default threshold of 55. The
-        flag would have missed three quarters of an answer in another language.
+        Before the fixes, a response spoken <em>entirely</em> in Hindi scored 63.8, and a
+        75%-Hindi response scored 46.8 — under the then-default threshold of 55. The flag
+        would have missed three quarters of an answer in another language. The final
+        curve is deliberately lower than the intermediate one: suppressing accent
+        false-positives costs sensitivity, and that trade is made on purpose.
       </figcaption>
     </figure>
 
@@ -484,7 +485,7 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
           <tr>
             <th>Group (all genuinely English)</th>
             <th class="num">mean</th><th class="num">p90</th><th class="num">max</th>
-            <th class="num">FPR @25</th><th class="num">FPR @40</th><th class="num">FPR @45</th>
+            <th class="num">FPR @25</th><th class="num">FPR @30</th><th class="num">FPR @45</th>
           </tr>
         </thead>
         <tbody>
@@ -494,10 +495,19 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
             <td class="num">0.0%</td><td class="num">0.0%</td><td class="num">0.0%</td>
           </tr>
           <tr>
-            <td><strong>Indian English &mdash; Svarah</strong></td>
+            <td><strong>Indian English &mdash; Svarah</strong><br>
+                <span class="quiet" style="font-size:12.5px">acoustic evidence alone</span></td>
             <td class="num">8.5</td><td class="num">26.8</td><td class="num">43.1</td>
             <td class="num" style="color:var(--risk);font-weight:600">16.7%</td>
             <td class="num" style="color:var(--signal)">8.3%</td>
+            <td class="num" style="color:var(--ok)">0.0%</td>
+          </tr>
+          <tr>
+            <td><strong>Indian English &mdash; Svarah</strong><br>
+                <span class="quiet" style="font-size:12.5px">after the corroboration fix</span></td>
+            <td class="num">3.4</td><td class="num">15.7</td><td class="num">21.9</td>
+            <td class="num" style="color:var(--ok);font-weight:600">0.0%</td>
+            <td class="num" style="color:var(--ok)">0.0%</td>
             <td class="num" style="color:var(--ok)">0.0%</td>
           </tr>
         </tbody>
@@ -525,8 +535,16 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
         vote. As an additive term it could only decline to add points; as a multiplier it
         can actively suppress. If the spans that sounded foreign are re-transcribed and
         come back as English, that is positive evidence the accent was misread, and the
-        score falls rather than merely failing to rise. The default threshold moved to
-        <strong>45</strong> — the lowest point at which accented English is not penalised.
+        score falls rather than merely failing to rise. The worst accented-English score
+        fell from 43.1 to <strong>21.9</strong>, and the false-positive rate at threshold
+        25 fell from 16.7% to <strong>zero</strong>. The default threshold is
+        <strong>30</strong> — margin above the worst observed accented score, with a
+        measured 0% false-positive rate on both English groups.
+      </p>
+      <p>
+        It is not free. A 20%-foreign response now scores 29.3 where it scored 51.0
+        before. That trade is deliberate: flagging a real candidate for their accent is
+        far worse than missing a partial code-switch.
       </p>
       <h3>Three caveats, recorded rather than buried</h3>
       <p class="quiet" style="font-size:14.5px;">
@@ -590,12 +608,12 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
           </tr>
           <tr>
             <td>Foreign-language FPR on <em>accented</em> English</td><td class="num big">0.0%</td>
-            <td>at threshold 45, after the corroboration fix — was 16.7% at 25</td>
+            <td>at threshold 30, n=20 per group — was 16.7% before the fix</td>
             <td><span class="pill ok">measured</span></td>
           </tr>
           <tr>
-            <td>Detects a response in another language</td><td class="num big">95.1</td>
-            <td>100% non-English, averaged over five languages</td>
+            <td>Detects a response in another language</td><td class="num big">91.9</td>
+            <td>a response fully in another language, averaged across languages</td>
             <td><span class="pill ok">measured</span></td>
           </tr>
           <tr>

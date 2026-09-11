@@ -330,7 +330,7 @@ def foreign_language_flag(
     lang_windows: list,
     transcript: str,
     asr_avg_logprob: float = 0.0,
-    threshold: float = 45.0,
+    threshold: float = 30.0,
     transcript_auto: str | None = None,
 ) -> FlagResult:
     """Non-English speech in the response.
@@ -358,20 +358,33 @@ def foreign_language_flag(
     threshold of 55. When it is not supplied the text channel abstains (its
     weight collapses) rather than silently voting "English".
 
-    **Measured on accented English.** Against Indian-accented English (Svarah,
-    n=12, genuinely English throughout) versus US English (FLEURS en_us, n=12):
+    **Measured on accented English**, which is what sets the threshold. Both
+    groups below speak English throughout: Indian-accented (Svarah) and US
+    (FLEURS en_us), n=20 each.
 
-    | threshold | FPR, US English | FPR, Indian English |
-    |---|---|---|
-    | 25 | 0.0% | **16.7%** |
-    | 40 | 0.0% | 8.3% |
-    | 45 | 0.0% | **0.0%** |
+    Before the corroboration multiplier, acoustic evidence alone gave accented
+    English mean 8.5 / max 43.1 and a **16.7% false-positive rate at threshold
+    25**, against 0.0% for US English. After it, accented English falls to mean
+    3.4 / max 21.9:
 
-    The default is therefore **45**, the lowest point at which accented English
-    is not penalised. Against the dose-response curve that still catches a
-    response roughly a fifth or more spoken in another language. n=12 is small;
-    re-run with more Svarah clips before treating the 0% as settled, and route
-    this flag to human review rather than to an automatic fail.
+    | threshold | FPR, US English | FPR, Indian English | catches (mean over hi/ta/sw) |
+    |---|---|---|---|
+    | 15 | 0.0% | 15.0% | ~10% foreign |
+    | 25 | 0.0% | 0.0% | ~20% foreign |
+    | **30** | **0.0%** | **0.0%** | ~20-25% foreign |
+    | 45 | 0.0% | 0.0% | ~35% foreign |
+
+    Default **30**: the measured floor for a zero false-positive rate is 25, and
+    30 adds margin over the worst observed accented score (21.9) without giving
+    up much sensitivity. Suppressing accent false-positives does cost detection
+    -- a 20%-foreign response scores 29.3 where it scored 51.0 before -- and that
+    trade is deliberate. Flagging a real candidate for their accent is far worse
+    than missing a partial code-switch.
+
+    n=20 per group. Re-run at higher n before treating the 0% as settled, note
+    that sensitivity is language-dependent (Yoruba is much weaker than Swahili,
+    so one global threshold is not equally fair across first languages), and
+    route this flag to human review rather than to an automatic fail.
     """
     feats: dict[str, float] = {}
 

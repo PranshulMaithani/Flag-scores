@@ -536,13 +536,51 @@ alone is not safe to act on for this population, and the scoring now encodes tha
 English is not penalised, while still catching a response roughly a fifth or more spoken
 in another language.
 
+### Confirmation run at n=20, after the multiplier
+Both groups still speaking English:
+
+| group | mean | p90 | max | FPR@15 | FPR@25 | FPR@30 |
+|---|---|---|---|---|---|---|
+| US English | 0.0 | 0.0 | 0.0 | 0.0% | 0.0% | 0.0% |
+| Indian English, acoustic only *(n=12)* | 8.5 | 26.8 | 43.1 | -- | **16.7%** | -- |
+| **Indian English, after the fix** *(n=20)* | **3.4** | **15.7** | **21.9** | 15.0% | **0.0%** | **0.0%** |
+
+The worst accented-English score fell from 43.1 to 21.9, and the false-positive rate at
+threshold 25 fell from 16.7% to zero.
+
+**Threshold set to 30**: the measured floor for a zero false-positive rate is 25, and 30
+adds margin over the worst observed accented score without giving up much sensitivity.
+(It had been raised to 45 on the n=12 data; the multiplier made that unnecessarily blunt.)
+
+### The trade, stated rather than hidden
+Suppressing accent false-positives costs real detection:
+
+| true % non-English | before fixes | intermediate | **final** |
+|---|---|---|---|
+| 10% | 4.2 | 24.0 | 14.0 |
+| 20% | 21.7 | 51.0 | **29.3** |
+| 35% | 32.3 | 62.7 | 52.8 |
+| 50% | 40.1 | 69.3 | 58.6 |
+| 100% | 63.8 | 95.1 | **91.9** |
+
+A 20%-foreign response scores 29.3 where the intermediate version gave 51.0. That is
+deliberate. Flagging a real candidate for their accent is far worse than missing a
+partial code-switch, and the two cannot both be optimised.
+
 ### Caveats recorded rather than buried
-- **n = 12 per group.** A 0% false-positive rate on twelve items is not a guarantee.
-  Re-run at higher n before treating it as settled.
+- **n = 20 per group.** A 0% false-positive rate on twenty items is not a guarantee.
 - **Language-dependent sensitivity.** Yoruba detection is much weaker than Swahili; one
   global threshold is not equally fair across L1s.
 - **This flag should route to human review, not to an automatic fail.** The code carries
   that statement in its docstring, not only here.
+
+### What this episode is actually about
+The prediction was written into `DESIGN.md` before any code existed, the experiment was
+built to test it specifically, the prediction was confirmed at 16.7%, and the fix was
+measured rather than assumed. None of that would have happened from an evaluation using
+only `en_us` -- which is the default any English-language corpus hands you, and which
+would have reported a flawless 0.0% false-positive rate while shipping a system that
+penalised the entire candidate population for their accent.
 
 ### The bias trap held
 All three real ideal answers describe a *low-key* birthday. The adversarial "BIG party"

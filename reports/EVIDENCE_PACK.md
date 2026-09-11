@@ -248,10 +248,11 @@ fine". Every such path now collapses its weight and renormalises.
 Both groups below are speaking **English**. Neither contains a word of anything
 else.
 
-| group | mean | p90 | max | FPR @25 | FPR @40 | FPR @55 |
-|---|---|---|---|---|---|---|
-| US English (FLEURS) | 0.0 | 0.0 | 0.0 | 0.0% | 0.0% | 0.0% |
-| **Indian English (Svarah)** | 8.5 | 26.8 | 43.1 | **16.7%** | 8.3% | 0.0% |
+| group | mean | p90 | max | FPR @25 | FPR @30 |
+|---|---|---|---|---|---|
+| US English (FLEURS) | 0.0 | 0.0 | 0.0 | 0.0% | 0.0% |
+| Indian English — acoustic evidence alone | 8.5 | 26.8 | 43.1 | **16.7%** | — |
+| **Indian English — after the corroboration fix** | **3.4** | **15.7** | **21.9** | **0.0%** | **0.0%** |
 
 > At the original default threshold of 25, **one in six Indian-accented
 > candidates would have been flagged for speaking a foreign language while
@@ -268,12 +269,17 @@ negatives, which is why we did.
 **Two changes followed.** The text channel became a **multiplier** rather than
 another additive vote: if the spans that sounded foreign are re-transcribed and
 come back as English, that is positive evidence the accent was misread, and the
-score falls rather than merely failing to rise. And the default threshold moved
-to **45**, the lowest point at which accented English is not penalised while
-still catching a response roughly a fifth or more in another language.
+score falls rather than merely failing to rise. The worst accented-English score
+fell from 43.1 to 21.9 and the false-positive rate at threshold 25 went to zero.
+The default threshold is **30** — margin above the worst observed accented score.
+
+**It is not free.** A 20%-foreign response now scores 29.3 where the intermediate
+version gave 51.0; a fully non-English response still scores 91.9. That trade is
+deliberate — flagging a real candidate for their accent is far worse than missing
+a partial code-switch, and the two cannot both be optimised.
 
 **Caveats, recorded rather than buried:**
-- n = 12 per group. A 0% false-positive rate on twelve items is not a guarantee.
+- n = 20 per group. A 0% false-positive rate on twenty items is not a guarantee.
 - Detection sensitivity is **language-dependent** — Yoruba scored 0.0 at 10%
   foreign where Swahili reached 52.8. One global threshold is not equally fair
   across L1s.

@@ -1,0 +1,444 @@
+{
+  "results": {
+    "fairness": [
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.018128013238310814
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.012525222264230251
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.01119320560246706
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.01575508527457714
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.014897153712809086
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.015530369244515896
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.01443054061383009
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.0052878051064908504
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.010698230937123299
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.018817007541656494
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.017317533493041992
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.009315838105976582
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.010429497808218002
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.007014267612248659
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.008560520596802235
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.008729524910449982
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.009432021528482437
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.006508494261652231
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.023439621552824974
+      },
+      {
+        "group": "US English (FLEURS)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.006507053039968014
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 20.372246968746186,
+        "corroboration": 0.4,
+        "mean_p_non_en": 0.23472310602664948
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.03634580224752426
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 0.0,
+        "corroboration": 0.4,
+        "mean_p_non_en": 0.1424582451581955
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.044927723705768585
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.09071731567382812
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 21.87953655719757,
+        "corroboration": 0.4,
+        "mean_p_non_en": 0.2885548770427704
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.0723143145442009
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.02448383904993534
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.08437236398458481
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 15.156711268424989,
+        "corroboration": 0.4,
+        "mean_p_non_en": 0.2627396881580353
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.09634832292795181
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.06647280603647232
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.03175904229283333
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.04991687089204788
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 8.20243691050838,
+        "corroboration": 0.5186454430059462,
+        "mean_p_non_en": 0.16164448857307434
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.057539552450180054
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.025519633665680885
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 1.6734011173248293,
+        "corroboration": 1.0,
+        "mean_p_non_en": 0.17390573024749756
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 0.0,
+        "corroboration": 1.0,
+        "mean_p_non_en": 0.1444748491048813
+      },
+      {
+        "group": "Indian English (Svarah)",
+        "score": 0.0,
+        "corroboration": 0.7,
+        "mean_p_non_en": 0.10499753803014755
+      }
+    ],
+    "dose": [
+      {
+        "lang": "hi",
+        "proportion": 0.0,
+        "score": 0.0
+      },
+      {
+        "lang": "hi",
+        "proportion": 0.0,
+        "score": 0.0
+      },
+      {
+        "lang": "ta",
+        "proportion": 0.0,
+        "score": 0.0
+      },
+      {
+        "lang": "ta",
+        "proportion": 0.0,
+        "score": 0.0
+      },
+      {
+        "lang": "sw",
+        "proportion": 0.0,
+        "score": 0.0
+      },
+      {
+        "lang": "sw",
+        "proportion": 0.0,
+        "score": 0.0
+      },
+      {
+        "lang": "hi",
+        "proportion": 0.1,
+        "score": 31.63751494884491
+      },
+      {
+        "lang": "hi",
+        "proportion": 0.1,
+        "score": 10.5
+      },
+      {
+        "lang": "ta",
+        "proportion": 0.1,
+        "score": 10.5
+      },
+      {
+        "lang": "ta",
+        "proportion": 0.1,
+        "score": 0.0
+      },
+      {
+        "lang": "sw",
+        "proportion": 0.1,
+        "score": 31.44555565714836
+      },
+      {
+        "lang": "sw",
+        "proportion": 0.1,
+        "score": 0.0
+      },
+      {
+        "lang": "hi",
+        "proportion": 0.2,
+        "score": 42.35379430651665
+      },
+      {
+        "lang": "hi",
+        "proportion": 0.2,
+        "score": 50.421347588300705
+      },
+      {
+        "lang": "ta",
+        "proportion": 0.2,
+        "score": 20.107641863822938
+      },
+      {
+        "lang": "ta",
+        "proportion": 0.2,
+        "score": 12.211285042762757
+      },
+      {
+        "lang": "sw",
+        "proportion": 0.2,
+        "score": 19.51662533283234
+      },
+      {
+        "lang": "sw",
+        "proportion": 0.2,
+        "score": 30.934805691242218
+      },
+      {
+        "lang": "hi",
+        "proportion": 0.35,
+        "score": 50.61338615417481
+      },
+      {
+        "lang": "hi",
+        "proportion": 0.35,
+        "score": 55.95131498575211
+      },
+      {
+        "lang": "ta",
+        "proportion": 0.35,
+        "score": 53.02302700281143
+      },
+      {
+        "lang": "ta",
+        "proportion": 0.35,
+        "score": 55.82892191410065
+      },
+      {
+        "lang": "sw",
+        "proportion": 0.35,
+        "score": 49.31867715716362
+      },
+      {
+        "lang": "sw",
+        "proportion": 0.35,
+        "score": 52.358254611492164
+      },
+      {
+        "lang": "hi",
+        "proportion": 0.5,
+        "score": 64.0764821767807
+      },
+      {
+        "lang": "hi",
+        "proportion": 0.5,
+        "score": 62.09219318628312
+      },
+      {
+        "lang": "ta",
+        "proportion": 0.5,
+        "score": 51.019612073898315
+      },
+      {
+        "lang": "ta",
+        "proportion": 0.5,
+        "score": 59.642335295677185
+      },
+      {
+        "lang": "sw",
+        "proportion": 0.5,
+        "score": 56.08951073884965
+      },
+      {
+        "lang": "sw",
+        "proportion": 0.5,
+        "score": 58.890780627727516
+      },
+      {
+        "lang": "hi",
+        "proportion": 1.0,
+        "score": 82.34850025177002
+      },
+      {
+        "lang": "hi",
+        "proportion": 1.0,
+        "score": 100.0
+      },
+      {
+        "lang": "ta",
+        "proportion": 1.0,
+        "score": 89.95652770996094
+      },
+      {
+        "lang": "ta",
+        "proportion": 1.0,
+        "score": 80.0
+      },
+      {
+        "lang": "sw",
+        "proportion": 1.0,
+        "score": 99.28654766082762
+      },
+      {
+        "lang": "sw",
+        "proportion": 1.0,
+        "score": 99.77402305603027
+      }
+    ]
+  },
+  "fpr": {
+    "US English (FLEURS)": {
+      "15": 0.0,
+      "25": 0.0,
+      "35": 0.0,
+      "45": 0.0,
+      "55": 0.0
+    },
+    "Indian English (Svarah)": {
+      "15": 0.15,
+      "25": 0.0,
+      "35": 0.0,
+      "45": 0.0,
+      "55": 0.0
+    }
+  }
+}
