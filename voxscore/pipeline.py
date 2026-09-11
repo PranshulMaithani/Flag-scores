@@ -88,18 +88,21 @@ class Pipeline:
         words = align_words(audio, asr.text) if asr.text.strip() else []
         lang_windows = self.asr.language_windows(audio)
 
-        # Second, unforced pass only when the acoustic channel is already
-        # suspicious. Most responses are clean English and skip it entirely, so
-        # the average cost is small while the foreign-language flag gets a
-        # genuinely independent text signal on the items that need one.
+        # Corroborating pass for the foreign-language flag, run only when the
+        # acoustic channel is already suspicious. It transcribes the *suspect
+        # spans* rather than the whole clip: with auto language detection over
+        # the full response, Whisper picks the majority language, so a partly
+        # Hindi answer transcribes as English and the text channel argues
+        # against the evidence it was meant to corroborate.
         transcript_auto = None
         if lang_windows:
             mean_non_en = float(np.mean([w.p_non_english for w in lang_windows]))
             if mean_non_en > AUTO_TRANSCRIBE_THRESHOLD:
                 try:
-                    transcript_auto = self.asr.transcribe_auto(audio).text
+                    txt = self.asr.transcribe_suspect_spans(audio, lang_windows)
+                    transcript_auto = txt or None
                 except Exception as exc:
-                    log.warning("auto-language pass failed: %s", exc)
+                    log.warning("suspect-span pass failed: %s", exc)
 
         return Stage1(
             transcript=asr.text,

@@ -34,6 +34,7 @@ from voxscore.asr.whisper_asr import WhisperASR
 from voxscore.config import RAW_DIR, REPORTS_DIR, SAMPLE_RATE, device_report
 from voxscore.eval.synth import make_code_switch, make_foreign_mix
 from voxscore.flags.detectors import foreign_language_flag
+from voxscore.pipeline import AUTO_TRANSCRIBE_THRESHOLD
 
 PROPORTIONS = [0.0, 0.05, 0.10, 0.20, 0.35, 0.50, 0.75, 1.0]
 FOREIGN_LANGS = ["hi", "ta", "tl", "sw", "yo"]
@@ -60,9 +61,15 @@ def build_response(clips: list[np.ndarray], rng: random.Random, target_s: float 
 
 
 def score_item(asr: WhisperASR, audio: np.ndarray) -> tuple[float, dict]:
+    """Score one item exactly as the pipeline would, corroborating pass included."""
     res = asr.transcribe(audio, language="en")
     lw = asr.language_windows(audio)
-    flag = foreign_language_flag(lw, res.text, res.avg_logprob)
+    auto = None
+    if lw:
+        mean_non_en = float(np.mean([w.p_non_english for w in lw]))
+        if mean_non_en > AUTO_TRANSCRIBE_THRESHOLD:
+            auto = asr.transcribe_suspect_spans(audio, lw) or None
+    flag = foreign_language_flag(lw, res.text, res.avg_logprob, transcript_auto=auto)
     return flag.score, flag.features
 
 
@@ -137,7 +144,7 @@ def main() -> int:
             print(f"\n  {name}  (n={len(a)})")
             print(f"    mean {a.mean():6.1f} | median {np.median(a):6.1f} | "
                   f"p90 {np.percentile(a, 90):6.1f} | max {a.max():6.1f}")
-            for t in (40, 55, 70):
+            for t in (15, 25, 40, 55):
                 print(f"    false-positive rate at threshold {t}: {(a >= t).mean():6.1%}")
 
     # ---- 3. code-switching ------------------------------------------------

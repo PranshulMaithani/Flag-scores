@@ -275,14 +275,57 @@ class WhisperASR:
         return prefix
 
     def transcribe_auto(self, audio: np.ndarray) -> ASRResult:
-        """Transcribe with Whisper choosing the language itself.
-
-        Used only to corroborate the foreign-language flag. The scoring
-        transcript is forced to English on purpose, which means it cannot double
-        as a language signal: forced English decoding of Hindi audio yields
-        English-looking tokens that a text language detector labels English.
-        """
+        """Transcribe with Whisper choosing the language itself."""
         return self.transcribe(audio, language=None)
+
+    def transcribe_suspect_spans(
+        self,
+        audio: np.ndarray,
+        lang_windows: list[LangWindow],
+        p_threshold: float = 0.5,
+        pad_s: float = 0.4,
+    ) -> str:
+        """Transcribe **only** the windows the acoustic model reads as non-English.
+
+        Transcribing the whole clip with auto language detection does not work
+        for *partial* code-switching, and measurement showed why: on a response
+        that was 25% Hindi, Whisper picked English for the clip -- correctly, it
+        is the majority language -- and the text detector then voted "English",
+        actively lowering the flag score from 35.2 to 25.6. The corroborating
+        channel was arguing against the evidence.
+
+        Cutting to the suspect spans first asks the right question: *is the part
+        that sounded foreign actually foreign?* On a fully English response no
+        spans qualify and this returns "", so the channel abstains.
+        """
+        if not lang_windows:
+            return ""
+        suspect = [w for w in lang_windows if w.p_non_english > p_threshold]
+        if not suspect:
+            return ""
+
+        # Merge overlapping/adjacent windows into contiguous spans.
+        spans: list[list[float]] = []
+        for w in sorted(suspect, key=lambda x: x.start):
+            s, e = max(0.0, w.start - pad_s), w.end + pad_s
+            if spans and s <= spans[-1][1]:
+                spans[-1][1] = max(spans[-1][1], e)
+            else:
+                spans.append([s, e])
+
+        pieces = []
+        for s, e in spans:
+            lo, hi = int(s * SAMPLE_RATE), min(int(e * SAMPLE_RATE), len(audio))
+            if hi - lo >= SAMPLE_RATE:
+                pieces.append(audio[lo:hi])
+        if not pieces:
+            return ""
+
+        try:
+            return self.transcribe(np.concatenate(pieces), language=None).text
+        except Exception as exc:  # pragma: no cover
+            log.debug("suspect-span transcription failed: %s", exc)
+            return ""
 
     # ---------------------------------------------------------------- #
     # Windowed language identification
