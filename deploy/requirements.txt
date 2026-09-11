@@ -1,4 +1,8 @@
-# voxscore scoring machine requirements
+# Requirements for the SCORING MACHINE only.
+#
+# make_bundle.py (step 1, on your own laptop) needs NOTHING from this file - it
+# runs on the standard library alone, so a locked-down machine where you cannot
+# pip install is fine.
 #
 #   pip install -r requirements.txt
 #   python run_scoring.py

@@ -11,6 +11,14 @@ and writes three things:
                           column for you to complete
     ciid_mapping.csv      anonymous id -> real ciid                   -> KEEP LOCAL
 
+DEPENDENCIES: none required.
+
+    This runs on the standard library alone -- `wave` reads the audio, `audioop`
+    resamples it, and the .npy files are written by hand, since the format is
+    just a short header followed by raw samples. numpy and soundfile are *used
+    if present* and simply make it faster; neither is needed. That matters on a
+    locked-down machine where installing packages is not an option.
+
 Only questions 25, 26 and 27 are packaged by default, since each candidate folder
 holds the full 1-27 set and only the last three are being scored. Change with
 --qids.
@@ -39,45 +47,141 @@ import csv
 import json
 import random
 import shutil
+import struct
+import sys
+import wave
 import zipfile
+from array import array
 from pathlib import Path
-
-import numpy as np
 
 SAMPLE_RATE = 16_000
 HERE = Path(__file__).resolve().parent
 DEFAULT_QIDS = "25,26,27"
 
+# Optional accelerators. Everything works without them.
+try:
+    import numpy as _np
+except Exception:
+    _np = None
+
+try:
+    import audioop as _audioop           # removed in Python 3.13
+except Exception:
+    _audioop = None
+
 
 def find_voxscore() -> Path | None:
-    """Locate the voxscore package so it can ride along in the zip."""
+    """Include the package in the zip if it happens to be here. Optional."""
     for cand in (HERE / "voxscore", HERE.parent / "voxscore", Path.cwd() / "voxscore"):
         if (cand / "__init__.py").exists():
             return cand
     return None
 
 
-def load_wav(path: Path) -> tuple[np.ndarray, int]:
-    """Read a wav to mono float32 at 16 kHz, without torch or ffmpeg."""
-    import soundfile as sf
+# --------------------------------------------------------------------------- #
+# WAV reading, standard library only
+# --------------------------------------------------------------------------- #
 
-    data, sr = sf.read(str(path), dtype="float32", always_2d=True)
-    audio = data.mean(axis=1).astype(np.float32)
-    if sr != SAMPLE_RATE:
-        try:
-            import soxr
+def read_wav(path: Path) -> tuple[object, int, int]:
+    """Read a PCM wav to mono float32 in [-1, 1].
 
-            audio = soxr.resample(audio, sr, SAMPLE_RATE).astype(np.float32)
-        except Exception:
-            import librosa
+    Returns ``(samples, original_rate, out_rate)``. ``samples`` is a numpy array
+    when numpy is available and an ``array('f')`` otherwise; both write out
+    identically.
 
-            audio = librosa.resample(audio, orig_sr=sr, target_sr=SAMPLE_RATE)
-            audio = audio.astype(np.float32)
-    peak = float(np.max(np.abs(audio))) if audio.size else 0.0
+    Only PCM is supported, which is what `wave` handles. Compressed wavs (rare
+    for assessment capture) are reported and skipped rather than silently
+    mangled.
+    """
+    with wave.open(str(path), "rb") as w:
+        n_ch, width, rate, n_frames = (w.getnchannels(), w.getsampwidth(),
+                                       w.getframerate(), w.getnframes())
+        raw = w.readframes(n_frames)
+
+    if width not in (1, 2, 4):
+        raise ValueError(f"unsupported sample width {width * 8}-bit")
+
+    # Downmix and resample on the integer samples, while audioop can still help.
+    if n_ch > 1 and _audioop is not None:
+        raw = _audioop.tomono(raw, width, 0.5, 0.5) if n_ch == 2 else raw
+        if n_ch > 2:
+            n_ch_eff = n_ch
+        else:
+            n_ch_eff = 1
+    else:
+        n_ch_eff = n_ch
+
+    out_rate = rate
+    if rate != SAMPLE_RATE and _audioop is not None and n_ch_eff == 1:
+        raw, _ = _audioop.ratecv(raw, width, 1, rate, SAMPLE_RATE, None)
+        out_rate = SAMPLE_RATE
+
+    if _np is not None:
+        dtype = {1: _np.uint8, 2: _np.int16, 4: _np.int32}[width]
+        a = _np.frombuffer(raw, dtype=dtype).astype(_np.float32)
+        if width == 1:
+            a = (a - 128.0) / 128.0
+        elif width == 2:
+            a = a / 32768.0
+        else:
+            a = a / 2147483648.0
+        if n_ch_eff > 1:
+            a = a.reshape(-1, n_ch_eff).mean(axis=1)
+        peak = float(abs(a).max()) if a.size else 0.0
+        if peak > 1.0:
+            a = a / peak
+        return _np.ascontiguousarray(a.astype(_np.float32)), rate, out_rate
+
+    # --- pure standard library path ---
+    code = {1: "b", 2: "h", 4: "i"}[width]
+    ints = array(code)
+    ints.frombytes(raw)
+    if sys.byteorder == "big":
+        ints.byteswap()
+    scale = {1: 128.0, 2: 32768.0, 4: 2147483648.0}[width]
+    if n_ch_eff > 1:
+        n = len(ints) // n_ch_eff
+        mono = array("f", (sum(ints[i * n_ch_eff + c] for c in range(n_ch_eff))
+                           / n_ch_eff / scale for i in range(n)))
+    else:
+        offset = 128.0 if width == 1 else 0.0
+        mono = array("f", ((s - offset) / scale for s in ints))
+    peak = max((abs(s) for s in mono), default=0.0)
     if peak > 1.0:
-        audio = audio / peak
-    return np.ascontiguousarray(audio), sr
+        mono = array("f", (s / peak for s in mono))
+    return mono, rate, out_rate
 
+
+def write_npy(path: Path, samples) -> None:
+    """Write a 1-D float32 .npy without numpy.
+
+    The format is a 6-byte magic, a version, a little-endian header length and a
+    short dict describing dtype and shape, padded so the data starts on a 64-byte
+    boundary. Writing it by hand removes the last reason this script would need a
+    third-party package.
+    """
+    if _np is not None:
+        _np.save(str(path), _np.asarray(samples, dtype=_np.float32),
+                 allow_pickle=False)
+        return
+
+    n = len(samples)
+    header = f"{{'descr': '<f4', 'fortran_order': False, 'shape': ({n},), }}"
+    prefix = 6 + 2 + 2                      # magic + version + header length
+    pad = 64 - ((prefix + len(header) + 1) % 64)
+    header = header + " " * pad + "\n"
+    with path.open("wb") as fh:
+        fh.write(b"\x93NUMPY\x01\x00")
+        fh.write(struct.pack("<H", len(header)))
+        fh.write(header.encode("latin-1"))
+        buf = samples if isinstance(samples, array) else array("f", samples)
+        if sys.byteorder == "big":
+            buf = array("f", buf)
+            buf.byteswap()
+        buf.tofile(fh)
+
+
+# --------------------------------------------------------------------------- #
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
@@ -99,6 +203,14 @@ def main() -> int:
         print(f"ERROR: {in_dir} does not exist")
         return 1
 
+    print(f"numpy {'available' if _np is not None else 'NOT available (using the '
+          'standard-library path, which is slower but works)'}")
+    if _audioop is None:
+        print("audioop not available (Python 3.13+). Audio will be uploaded at its")
+        print("original sample rate and resampled on the scoring machine instead;")
+        print("the only cost is a larger zip.")
+    print()
+
     keep_all = args.qids.strip().lower() == "all"
     keep = set() if keep_all else {q.strip() for q in args.qids.split(",") if q.strip()}
 
@@ -114,9 +226,8 @@ def main() -> int:
     wavs = all_wavs if keep_all else [w for w in all_wavs if qid_of(w) in keep]
     skipped = len(all_wavs) - len(wavs)
     if not wavs:
-        found = sorted({qid_of(w) for w in all_wavs})
         print(f"ERROR: no files matched --qids {args.qids}")
-        print(f"       question ids present: {found}")
+        print(f"       question ids present: {sorted({qid_of(w) for w in all_wavs})}")
         return 1
 
     ciids = sorted({(w.parent.name if w.parent != in_dir else w.stem.split("_")[0])
@@ -138,38 +249,38 @@ def main() -> int:
     print(f"{len(ciids)} candidates\n")
 
     rows, failures = [], []
-    for w in wavs:
+    for i, w in enumerate(wavs, 1):
         ciid = w.parent.name if w.parent != in_dir else w.stem.split("_")[0]
         qid = qid_of(w)
         item_id = f"{anon[ciid]}_{qid}"
 
         try:
-            audio, orig_sr = load_wav(w)
+            samples, orig_sr, out_sr = read_wav(w)
         except Exception as exc:
             failures.append((str(w), f"{type(exc).__name__}: {exc}"))
             continue
 
-        np.save(staging / "npy" / f"{item_id}.npy", audio, allow_pickle=False)
+        write_npy(staging / "npy" / f"{item_id}.npy", samples)
+        dur = round(len(samples) / out_sr, 3)
         (staging / "npy" / f"{item_id}.json").write_text(json.dumps({
             "item_id": item_id, "question_id": qid,
-            "orig_sr": SAMPLE_RATE, "source_sr": orig_sr,
-            "duration_s": round(len(audio) / SAMPLE_RATE, 3),
+            "orig_sr": out_sr, "source_sr": orig_sr, "duration_s": dur,
         }), encoding="utf-8")
         rows.append({"anon_id": anon[ciid], "ciid": ciid, "question_id": qid,
-                     "item_id": item_id, "source_file": str(w),
-                     "duration_s": round(len(audio) / SAMPLE_RATE, 3)})
+                     "item_id": item_id, "source_file": str(w), "duration_s": dur})
+
+        if i % 100 == 0 or i == len(wavs):
+            print(f"  {i}/{len(wavs)} converted", flush=True)
 
     # --- code, if it happens to be here ----------------------------------
-    # Optional on purpose. This script is meant to be a single file you drop
-    # into the folder holding the audio, and requiring the package beside it
-    # made that fail for no good reason. When absent, run_scoring.py fetches the
-    # code from the public repo instead.
+    # Optional on purpose. This script is meant to be a single file you drop into
+    # the folder holding the audio; when the package is absent, run_scoring.py
+    # fetches it from the public repo.
     pkg = find_voxscore()
     if pkg is not None:
         shutil.copytree(pkg, staging / "voxscore",
                         ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
 
-    # --- zip -------------------------------------------------------------
     zip_path = out_dir / "voxscore_bundle.zip"
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
         for f in sorted(staging.rglob("*")):
@@ -178,10 +289,9 @@ def main() -> int:
     shutil.rmtree(staging)
 
     # --- upload.csv: goes WITH the zip, question column left for you -----
-    # Deliberately one row per audio rather than one per question id. If every
-    # candidate answered the same question 25 you can fill one row and copy it
-    # down; if the item shown varied by candidate, the per-audio row is the only
-    # thing that can express that.
+    # One row per audio rather than one per question id. If every candidate
+    # answered the same question 25 you fill one row and copy down; if the item
+    # varied by candidate, the per-audio row is the only thing that can say so.
     upload_path = out_dir / "upload.csv"
     with upload_path.open("w", newline="", encoding="utf-8") as fh:
         wri = csv.DictWriter(fh, fieldnames=["item_id", "anon_id", "question_id",
@@ -200,10 +310,10 @@ def main() -> int:
         wri.writeheader()
         wri.writerows(rows)
 
-    qids_done = sorted({r["question_id"] for r in rows})
+    print()
     print(f"{'items packaged':24s}{len(rows)}")
     print(f"{'candidates':24s}{len(ciids)}")
-    print(f"{'question ids':24s}{qids_done}")
+    print(f"{'question ids':24s}{sorted({r['question_id'] for r in rows})}")
     if failures:
         print(f"{'FAILED to read':24s}{len(failures)}")
         for f, why in failures[:5]:
@@ -216,10 +326,6 @@ def main() -> int:
     print(f"  2. UPLOAD BOTH  {zip_path}   ({zip_path.stat().st_size / 1e9:.2f} GB)")
     print(f"                  {upload_path}")
     print(f"  3. KEEP LOCAL   {map_path}   (the only way back to real ciids)")
-    if pkg is None:
-        print()
-        print("  (voxscore/ was not found beside this script, which is fine --")
-        print("   run_scoring.py downloads the code itself.)")
     print()
     print("Then on the scoring machine, with run_scoring.py and requirements.txt:")
     print("    pip install -r requirements.txt")
