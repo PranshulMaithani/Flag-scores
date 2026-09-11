@@ -161,7 +161,16 @@ class WhisperASR:
 
         seq = out.sequences if hasattr(out, "sequences") else out
         text = processor.batch_decode(seq, skip_special_tokens=True)[0].strip()
-        avg_lp = self._sequence_confidence(model, processor, feats, seq, language)
+
+        if duration <= WHISPER_CHUNK_S:
+            avg_lp = self._sequence_confidence(model, processor, feats, seq, language)
+        else:
+            # Long-form output spans several encoder windows, so teacher-forcing
+            # the whole transcript against one 30 s window scores most tokens
+            # against audio the decoder never saw. Measured effect: a clean 40 s
+            # item reported confidence low enough to trip the "not English"
+            # signal. Estimate from a single window instead, and say so.
+            avg_lp = self._confidence_sample(processor, model, audio, language)
 
         return ASRResult(
             text=text,
@@ -219,6 +228,32 @@ class WhisperASR:
             return float(scored.mean())
         except Exception as exc:  # pragma: no cover
             log.debug("confidence computation failed: %s", exc)
+            return 0.0
+
+    def _confidence_sample(self, processor, model, audio, language, window_s: float = 30.0):
+        """Confidence estimated from the first 30 s, transcribed short-form.
+
+        Costs one extra generate call on a single window. Acceptable here because
+        the client processes in batch with no latency requirement, and the
+        alternative is a confidence number that is quietly wrong on every
+        response longer than 30 s -- which is most of them.
+        """
+        try:
+            clip = np.asarray(audio[: int(window_s * SAMPLE_RATE)], dtype=np.float32)
+            if len(clip) < SAMPLE_RATE:
+                return 0.0
+            inputs = processor(clip, sampling_rate=SAMPLE_RATE, return_tensors="pt")
+            feats = inputs.input_features.to(self.device, self.dtype)
+            kw = {"num_beams": 1}
+            if language:
+                kw["language"] = language
+                kw["task"] = "transcribe"
+            with torch.inference_mode():
+                seq = model.generate(feats, **kw)
+            seq = seq.sequences if hasattr(seq, "sequences") else seq
+            return self._sequence_confidence(model, processor, feats, seq, language)
+        except Exception as exc:  # pragma: no cover
+            log.debug("sampled confidence failed: %s", exc)
             return 0.0
 
     @staticmethod

@@ -259,6 +259,83 @@ per question for free.
 *less* question-similar than a model answer, because it adds content of its own. Echo
 exceeds the reference. This goes straight into the `prompt_read` flag.
 
+---
+
+## 2026-09-11 — Day 0 (cont.): full pipeline, and three bugs the smoke test caught
+
+Wired everything together: `pipeline.py`, the scorecard in `scoring/aggregate.py`, the
+remaining feature blocks (fluency, lexical, grammar, quality), and XML/JSON output.
+84 features per item. First end-to-end run used ~40 s of concatenated LibriSpeech
+paired with the birthday question -- deliberately nonsense as an *answer*, so relevance
+should collapse while every other path still executes.
+
+It found three defects. None of them crashed; all three produced plausible numbers.
+
+### 1. Relevance must multiply, not average
+The off-topic passage scored `off_topic` **98.2** while relevance came out at **73.3**.
+Flatly contradictory.
+
+Cause: `specificity` and `content_novelty_vs_q` are **topic-blind**. They were added to
+catch vague and echoed answers and they do that well -- but a wholly off-topic passage
+is *dense* with specific, novel content. It is simply about the wrong thing. Averaging
+them alongside the topic features let off-topic content buy relevance points back.
+
+Restructured as **anchor x engagement**: is it about the question, times is it a
+substantive answer, with a floor on the multiplier. An additive model cannot express
+"this is disqualifying", and relevance has exactly one disqualifying condition. Result:
+73.3 -> **8.7**, now consistent with the flag.
+
+### 2. Every "lower is better" curve was double-negated
+`_curve(x, lo, hi)` already encodes direction: `lo > hi` means lower is better. It also
+had an `invert=True` flag, and **all six** such features passed the flag *and* ordered
+`lo > hi`, cancelling out.
+
+So the shipped scorecard rewarded:
+- **more** grammatical errors
+- **more** long pauses and **more** filled pauses
+- **commoner** vocabulary
+- **more** topic drift
+
+Every score stayed in a believable 0-100 range and nothing raised. Grammar on clean
+LibriSpeech prose scored 40.4; after the fix, 72.8.
+
+The flag is now **deleted** rather than fixed, so the mistake is unexpressible.
+`tests/test_scoring.py` asserts the direction of all 13 scorecard features, because
+this is precisely the bug class that unit tests exist for and smoke tests miss.
+
+### 3. ASR confidence was wrong on every response over 30 s
+The teacher-forced confidence pass truncates features to one 30 s encoder window while
+scoring the *whole* transcript, so on long-form items most tokens were scored against
+audio the decoder never saw. A clean 40 s item reported confidence low enough to trip
+the foreign-language flag's "ASR struggled to read this as English" signal (10.0) and
+to emit a spurious quality warning.
+
+Fixed by estimating confidence from a separate short-form pass over the first 30 s,
+documented as a sample. Costs one extra generate call, which is free in a batch job.
+Foreign-language went 10.0 -> **0.0** and quality confidence 0.80 -> **1.00**.
+
+### Final state of the smoke item
+| | score | correct? |
+|---|---|---|
+| grammar | 72.8 | yes -- clean published prose |
+| lexical | 73.8 | yes -- rich Victorian vocabulary |
+| fluency | 68.7 | yes -- professional read speech |
+| relevance | **8.7** | yes -- nothing to do with the question |
+| `off_topic` | 98.2 fired | yes |
+| `repetition` | 55.7 fired | yes -- the audio was genuinely doubled |
+| `prompt_read` / `foreign_language` | 0.0 | yes |
+
+Runtime 38.9 s for 40 s of audio (1.03x realtime) including all models. Well inside a
+batch budget.
+
+**Reflection worth keeping:** all three bugs produced *plausible* output. The smoke test
+caught them only because I checked whether the numbers were **mutually consistent**
+(a flag saying off-topic while the score said relevant) rather than whether the run
+succeeded. Consistency checks between independent outputs are worth more here than
+any single assertion.
+
+**Status:** 52 tests passing. Full pipeline verified end to end.
+
 ### The bias trap held
 All three real ideal answers describe a *low-key* birthday. The adversarial "BIG party"
 response scored **at or above** the quiet one on every relevance feature

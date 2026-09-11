@@ -127,7 +127,7 @@ class ModelSpec:
 MODELS: dict[str, ModelSpec] = {
     "asr": ModelSpec(
         hf_id="openai/whisper-large-v3",
-        licence="MIT",
+        licence="Apache-2.0",
         commercial_ok=True,
         purpose="Transcription + per-window language identification",
         notes="Multilingual on purpose: the foreign-language flag needs real "
@@ -154,18 +154,25 @@ MODELS: dict[str, ModelSpec] = {
         purpose="Entailment coverage and stance detection",
     ),
     "gec": ModelSpec(
-        hf_id="prithivida/grammar_error_correcter_v1",
+        hf_id="Unbabel/gec-t5_small",
         licence="Apache-2.0",
         commercial_ok=True,
         purpose="Grammatical error correction, diffed by ERRANT into typed errors",
-        notes="PROVISIONAL - licence must be re-verified before shipping.",
+        notes="Chosen on LICENCE, not quality. Every stronger GEC model on the Hub "
+              "is non-commercial: vennify/t5-base-grammar-correction is CC-BY-NC-SA "
+              "(86k downloads, the popular default), grammarly/coedit-large is "
+              "CC-BY-NC, pszemraj/flan-t5-large-grammar-synthesis is dual-licensed "
+              "with an NC term, and prithivida/grammar_error_correcter_v1 states no "
+              "licence at all (no licence means no grant). This is the only clean "
+              "option and it is t5-small. See reports/ for the measured accuracy cost.",
     ),
     "lid": ModelSpec(
         hf_id="speechbrain/lang-id-voxlingua107-ecapa",
         licence="Apache-2.0",
         commercial_ok=True,
         purpose="Second-opinion acoustic language ID",
-        notes="PROVISIONAL - VoxLingua107 training data licence needs checking.",
+        notes="Model weights Apache-2.0 (verified on Hub). The VoxLingua107 training "
+              "corpus itself is CC-BY-4.0; attribution required, commercial use fine.",
     ),
     "speaker": ModelSpec(
         hf_id="speechbrain/spkrec-ecapa-voxceleb",
