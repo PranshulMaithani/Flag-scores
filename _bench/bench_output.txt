@@ -1,0 +1,34 @@
+C:\Users\prans\mlenv\Lib\site-packages\torch\nn\functional.py:6487: UserWarning: Using AOTriton backend for Efficient Attention forward... (Triggered internally at C:/b/pytorch/aten/src/ATen/native/transformers/hip/attention.hip:1452.)
+  attn_output = scaled_dot_product_attention(
+C:\Users\prans\mlenv\Lib\site-packages\torch\autograd\graph.py:841: UserWarning: Using AOTriton backend for Efficient Attention backward... (Triggered internally at C:/b/pytorch/aten/src/ATen/native/transformers/hip/attention_backward.hip:551.)
+  return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+C:\Users\prans\mlenv\Lib\site-packages\torch\_inductor\compile_fx.py:312: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+  warnings.warn(
+=== Device: AMD Radeon RX 9070 XT ===
+torch 2.9.1+rocm7.2.1, hip 7.2.53211-158bd99533
+
+--- Memory bandwidth (H2D / D2H / D2D copy) ---
+H2D: 55.8 GB/s
+D2H: 56.6 GB/s
+D2D: 580.5 GB/s (read+write)
+
+--- Matmul (GEMM) throughput ---
+fp32  4096x4096: 8.707 ms/iter -> 15.78 TFLOPS
+fp16  4096x4096: 1.007 ms/iter -> 136.50 TFLOPS
+bf16  4096x4096: 0.996 ms/iter -> 138.00 TFLOPS
+
+--- CNN training (torchvision resnet18, batch=64, 224x224) ---
+fp32: 908.1 images/sec, last loss=0.1221
+bf16 autocast: 954.5 images/sec, last loss=0.0199
+Peak GPU memory allocated: 2.84 GB
+
+
+--- Transformer block training (d_model=1024, seq=512, batch=16) ---
+fp32: 5.08 steps/sec, 41620 tokens/sec, last loss=1.8797
+bf16 autocast: 64.68 steps/sec, 529836 tokens/sec, last loss=1.7335
+Peak GPU memory allocated: 2.55 GB
+
+--- torch.compile smoke test ---
+torch.compile FAILED (this is a known problem area on ROCm/Windows): TritonMissing('Cannot find a working triton installation. Either the package is not installed or it is too old. More information on installing Triton can be found at: https://github.com/triton-lang/triton\n\nSet TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you\'re reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS="+dynamo"\n')
+
+=== BENCHMARK COMPLETE ===
