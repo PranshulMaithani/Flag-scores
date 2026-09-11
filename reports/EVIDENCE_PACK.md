@@ -19,7 +19,8 @@ shipped model commercially licensed, ~1× realtime at 3.1 GB VRAM.
 | Lexical scores rank proficiency correctly | Spearman **0.856**, 94.4% pairwise |
 | Gaming flags separate cleanly | AUC **1.000** for prompt-read, repetition, off-topic; 0% FPR |
 | Relevance separates on- from off-topic | AUC **1.000**; a wholly off-topic response scores 8.7/100 |
-| No false alarms on native English | foreign-language FPR **0.0%** at every threshold tested |
+| No false alarms on **accented** English | foreign-language FPR **0.0%** on Indian-accented English at the shipped threshold (was 16.7% before the fix) |
+| Detects a response in another language | **91.9**/100 when fully non-English; 0.0 when fully English |
 | Brief code-switching is not punished | 1–2 foreign fragments (1.6–3.1% of audio) score **0.0** |
 | Runs inside the production budget | 3.1 GB VRAM, ~1× realtime including all models |
 
@@ -30,11 +31,14 @@ shipped model commercially licensed, ~1× realtime at 3.1 GB VRAM.
    cannot yet show it distinguishes a *good* on-topic answer from a *mediocre*
    one — and that is exactly what your 0–5 relevance labels encode. This is the
    single largest open risk and your 350-item set resolves it in one run.
-2. **The foreign-language flag's false-positive rate on accented English.** See
-   §5. Until that number exists the flag must not be used to fail candidates,
-   and the code ships with a provisional threshold saying so.
-3. **Fluency against proficiency labels.** Validating it needs *graded audio*,
+2. **Fluency against proficiency labels.** Validating it needs *graded audio*,
    which no permissively licensed corpus provides.
+3. **ASR word-error rate on your accents.** Everything downstream inherits it,
+   and we have no reference transcripts to measure against.
+
+The accent-fairness result in §5 is now measured rather than pending, but at
+n = 20 per group — enough to have caught a 16.7% failure, not enough to certify
+a 0%. Treat the flag as advisory until it has run against your own data.
 
 Nothing here is fitted to your data. The default scorer is an unfitted scorecard,
 so these are floors rather than optimistic estimates.
