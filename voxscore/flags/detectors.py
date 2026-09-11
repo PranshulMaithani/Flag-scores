@@ -330,7 +330,8 @@ def foreign_language_flag(
     lang_windows: list,
     transcript: str,
     asr_avg_logprob: float = 0.0,
-    threshold: float = 55.0,
+    threshold: float = 25.0,
+    transcript_auto: str | None = None,
 ) -> FlagResult:
     """Non-English speech in the response.
 
@@ -348,9 +349,18 @@ def foreign_language_flag(
     * thresholds are meant to be set against **accented-English negatives**
       (Svarah, FLEURS accented sets), not against native English
 
-    Calibration is pending: those corpora are gated and access has been requested
-    from the client. Until that is done this flag's threshold is provisional and
-    should not be used to fail candidates.
+    ``transcript_auto`` is a second transcription made **without forcing English**.
+    It exists because the scoring transcript is deliberately forced to English, so
+    on Hindi audio Whisper emits garbled English-looking text and a text language
+    detector reads it as English -- the corroborating channel could never fire.
+    Measured consequence before this was added: a response that was **100%**
+    Hindi scored only 63.8, and 75% Hindi scored 46.8, below the old default
+    threshold of 55. When it is not supplied the text channel abstains (its
+    weight collapses) rather than silently voting "English".
+
+    Calibration against accented-English negatives is pending: those corpora are
+    gated and access has been requested from the client. Until that is done this
+    threshold is provisional and must not be used to fail candidates.
     """
     feats: dict[str, float] = {}
 
@@ -371,16 +381,28 @@ def foreign_language_flag(
                   "max_run_non_english", "nonen_duration_s", "n_distinct_foreign_langs"):
             feats[k] = 0.0
 
-    feats["text_p_non_english"] = _text_lid_non_english(transcript)
+    # Prefer the unforced transcription for language ID; the forced one can only
+    # reveal non-Latin script leaking through, not a genuine language judgement.
+    text_for_lid = transcript_auto if transcript_auto else transcript
+    feats["text_p_non_english"] = _text_lid_non_english(text_for_lid)
+    feats["text_lid_available"] = 1.0 if transcript_auto else 0.0
     feats["asr_avg_logprob"] = asr_avg_logprob
 
+    w_text = 0.30 if transcript_auto else 0.0
     signals = {
-        "sustained non-English audio": (_squash(feats["max_run_non_english"], 1.5, 5.0), 0.35),
-        "much of the audio is non-English": (_squash(feats["mean_p_non_english"], 0.25, 0.7), 0.25),
-        "transcript is not English": (_squash(feats["text_p_non_english"], 0.3, 0.8), 0.30),
-        "ASR struggled to read it as English": (_squash(-asr_avg_logprob, 0.6, 1.1), 0.10),
+        "sustained non-English audio": (
+            _squash(feats["max_run_non_english"], 1.0, 4.0), 0.40),
+        "much of the audio is non-English": (
+            _squash(feats["mean_p_non_english"], 0.15, 0.65), 0.30),
+        "transcript is not English": (
+            _squash(feats["text_p_non_english"], 0.3, 0.8), w_text),
+        "ASR struggled to read it as English": (
+            _squash(-asr_avg_logprob, 0.6, 1.1), 0.10),
     }
-    score = 100.0 * sum(v * w for v, w in signals.values())
+    # Renormalise by the weights that actually voted, so an abstaining text
+    # channel cannot cap the achievable score.
+    total_w = sum(w for _, w in signals.values()) or 1.0
+    score = 100.0 * sum(v * w for v, w in signals.values()) / total_w
     top = sorted(signals.items(), key=lambda kv: -kv[1][0] * kv[1][1])
     evidence = "; ".join(f"{k} ({v:.2f})" for k, (v, _) in top[:3] if v > 0.1) or "English throughout"
 

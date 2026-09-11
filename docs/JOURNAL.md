@@ -422,6 +422,67 @@ thresholds now come from curves.
 These AUCs are on a small, self-generated set and will fall on real data. The value is
 directional: the flags key on the intended signals and do not fire on genuine answers.
 
+---
+
+## 2026-09-11 — Day 0 (cont.): the foreign-language flag was structurally broken
+
+Ran the dose-response experiment: splice controlled proportions of Hindi and Tamil
+(FLEURS, CC-BY-4.0) into English responses and plot flag score against true proportion.
+This is worth more than a positive/negative set because it says what a threshold
+*means*, which is the decision the client kept for themselves.
+
+| true % non-English | flag score |
+|---|---|
+| 0% | 0.0 |
+| 5% | 2.5 |
+| 10% | 4.2 |
+| 20% | 21.7 |
+| 35% | 32.3 |
+| 50% | 40.1 |
+| 75% | 46.8 |
+| **100%** | **63.8** |
+
+Monotonic, which is the good news. The bad news is the ceiling: **a response spoken
+entirely in Hindi scored 63.8**, and one that was 75% Hindi scored 46.8 -- below the
+default threshold of 55. The flag would have missed three quarters of an answer in
+another language.
+
+### Why: the corroborating channel could never fire
+The scoring transcript is forced to English on purpose (ADR-004) so that a Hindi stretch
+produces visibly broken output rather than clean Hindi that the grammar and lexical
+modules would score as though it were an answer. That decision is right.
+
+But the foreign-language flag then ran its *text* language detector over that same
+forced-English transcript. Forced English decoding of Hindi audio yields
+English-looking tokens, so the text detector reported "English" no matter what. That
+channel carried weight 0.30 and voted "not foreign" on every item, capping the
+achievable score at 0.70 before any other consideration.
+
+This is the same bug class as the abstention problem found earlier: **a channel that
+cannot measure was voting instead of abstaining.** Third instance in this project.
+Worth naming as a pattern rather than fixing case by case.
+
+### Fix
+A second, unforced transcription, run **only when the acoustic channel is already
+suspicious** (mean p(non-English) > 0.12). Clean English responses measure below 0.02
+and skip it entirely, so the average cost is small while the items that need an
+independent text signal get one. When it is absent the text channel abstains and the
+remaining weights renormalise, so it can no longer cap the score.
+
+Also rebalanced toward the acoustic channels and dropped the default threshold from 55
+to 25, since the flag's dynamic range is far narrower than the other three.
+
+### The good news, unchanged by any of this
+- **US English false-positive rate: 0.0%** at thresholds 40, 55 and 70. Mean score 0.0,
+  max 0.0 across 12 native-English responses.
+- **Brief code-switching correctly ignored.** One or two foreign fragments (1.6-3.1% of
+  audio) scored **0.0**. A candidate dropping a couple of borrowed words is not
+  answering in another language, and the flag agrees.
+
+The experiment that actually decides deployability -- false-positive rate on
+**Indian-accented English** -- is still blocked on the Svarah download. Until that
+number exists, this flag must not be used to fail anyone, and the code says so.
+
 ### The bias trap held
 All three real ideal answers describe a *low-key* birthday. The adversarial "BIG party"
 response scored **at or above** the quiet one on every relevance feature

@@ -38,6 +38,11 @@ from voxscore.xml_out import ItemResult
 
 log = logging.getLogger(__name__)
 
+# Acoustic mean p(non-English) above which a second, unforced transcription is
+# worth running. Low enough to catch partial code-switching, high enough that
+# clean English responses (measured mean p(non-en) < 0.02) never trigger it.
+AUTO_TRANSCRIBE_THRESHOLD = 0.12
+
 
 @dataclass
 class Stage1:
@@ -48,6 +53,7 @@ class Stage1:
     lang_windows: list
     avg_logprob: float
     asr_seconds: float
+    transcript_auto: str | None = None
 
 
 class Pipeline:
@@ -81,12 +87,27 @@ class Pipeline:
         asr = self.asr.transcribe(audio, language="en")
         words = align_words(audio, asr.text) if asr.text.strip() else []
         lang_windows = self.asr.language_windows(audio)
+
+        # Second, unforced pass only when the acoustic channel is already
+        # suspicious. Most responses are clean English and skip it entirely, so
+        # the average cost is small while the foreign-language flag gets a
+        # genuinely independent text signal on the items that need one.
+        transcript_auto = None
+        if lang_windows:
+            mean_non_en = float(np.mean([w.p_non_english for w in lang_windows]))
+            if mean_non_en > AUTO_TRANSCRIBE_THRESHOLD:
+                try:
+                    transcript_auto = self.asr.transcribe_auto(audio).text
+                except Exception as exc:
+                    log.warning("auto-language pass failed: %s", exc)
+
         return Stage1(
             transcript=asr.text,
             words=words,
             lang_windows=lang_windows,
             avg_logprob=asr.avg_logprob,
             asr_seconds=time.perf_counter() - t0,
+            transcript_auto=transcript_auto,
         )
 
     def score_item(self, item: AudioItem) -> ItemResult:
@@ -119,7 +140,8 @@ class Pipeline:
             prompt_read_flag(parsed, item.question_text or "", rel_f),
             repetition_flag(parsed, self.embedder, item.audio),
             off_topic_flag(rel_f),
-            foreign_language_flag(s1.lang_windows, s1.transcript, s1.avg_logprob),
+            foreign_language_flag(s1.lang_windows, s1.transcript, s1.avg_logprob,
+                                  transcript_auto=s1.transcript_auto),
         ]
 
         scores = score_all(gra_f, lex_f, flu_f, rel_f, qual)

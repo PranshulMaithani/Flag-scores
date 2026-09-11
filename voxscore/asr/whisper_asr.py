@@ -274,6 +274,16 @@ class WhisperASR:
                 prefix.append(int(t))
         return prefix
 
+    def transcribe_auto(self, audio: np.ndarray) -> ASRResult:
+        """Transcribe with Whisper choosing the language itself.
+
+        Used only to corroborate the foreign-language flag. The scoring
+        transcript is forced to English on purpose, which means it cannot double
+        as a language signal: forced English decoding of Hindi audio yields
+        English-looking tokens that a text language detector labels English.
+        """
+        return self.transcribe(audio, language=None)
+
     # ---------------------------------------------------------------- #
     # Windowed language identification
     # ---------------------------------------------------------------- #

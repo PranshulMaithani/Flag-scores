@@ -1,0 +1,404 @@
+{
+  "dose_response": [
+    {
+      "lang": "hi",
+      "proportion": 0.0,
+      "score": 0.0,
+      "detail": "0% (hi)"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.0,
+      "score": 0.0,
+      "detail": "0% (hi)"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.0,
+      "score": 0.0,
+      "detail": "0% (hi)"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.0,
+      "score": 0.0,
+      "detail": "0% (ta)"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.0,
+      "score": 0.0,
+      "detail": "0% (ta)"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.0,
+      "score": 0.0,
+      "detail": "0% (ta)"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.05,
+      "score": 5.0,
+      "detail": "5% hi inserted at 27.4s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.05,
+      "score": 0.0,
+      "detail": "5% hi inserted at 33.0s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.05,
+      "score": 0.0,
+      "detail": "5% hi inserted at 20.5s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.05,
+      "score": 0.0,
+      "detail": "5% ta inserted at 19.8s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.05,
+      "score": 10.0,
+      "detail": "5% ta inserted at 14.5s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.05,
+      "score": 0.0,
+      "detail": "5% ta inserted at 18.4s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.1,
+      "score": 5.0,
+      "detail": "10% hi inserted at 31.9s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.1,
+      "score": 5.0,
+      "detail": "10% hi inserted at 26.7s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.1,
+      "score": 0.0,
+      "detail": "10% hi inserted at 13.3s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.1,
+      "score": 0.0,
+      "detail": "10% ta inserted at 26.2s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.1,
+      "score": 0.0,
+      "detail": "10% ta inserted at 36.5s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.1,
+      "score": 15.0,
+      "detail": "10% ta inserted at 16.9s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.2,
+      "score": 15.0,
+      "detail": "20% hi inserted at 24.9s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.2,
+      "score": 35.152832931942406,
+      "detail": "20% hi inserted at 8.0s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.2,
+      "score": 15.0,
+      "detail": "20% hi inserted at 26.3s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.2,
+      "score": 35.0,
+      "detail": "20% ta inserted at 28.2s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.2,
+      "score": 5.0,
+      "detail": "20% ta inserted at 21.4s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.2,
+      "score": 25.0,
+      "detail": "20% ta inserted at 18.6s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.35,
+      "score": 35.0,
+      "detail": "35% hi inserted at 7.3s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.35,
+      "score": 37.5485141409768,
+      "detail": "35% hi inserted at 9.2s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.35,
+      "score": 36.36619640721215,
+      "detail": "35% hi inserted at 24.6s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.35,
+      "score": 35.0,
+      "detail": "35% ta inserted at 9.5s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.35,
+      "score": 25.0,
+      "detail": "35% ta inserted at 28.5s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.35,
+      "score": 25.0,
+      "detail": "35% ta inserted at 15.2s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.5,
+      "score": 41.64946436882019,
+      "detail": "50% hi inserted at 14.0s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.5,
+      "score": 39.22473914093441,
+      "detail": "50% hi inserted at 11.8s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.5,
+      "score": 42.46223164929284,
+      "detail": "50% hi inserted at 17.6s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.5,
+      "score": 38.40964065657722,
+      "detail": "50% ta inserted at 10.1s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.5,
+      "score": 37.22093860308329,
+      "detail": "50% ta inserted at 13.4s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.5,
+      "score": 41.460893485281204,
+      "detail": "50% ta inserted at 16.3s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.75,
+      "score": 48.03058862686157,
+      "detail": "75% hi inserted at 7.1s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.75,
+      "score": 47.2800866762797,
+      "detail": "75% hi inserted at 10.1s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.75,
+      "score": 42.49850438700782,
+      "detail": "75% hi inserted at 10.5s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.75,
+      "score": 42.77332153585222,
+      "detail": "75% ta inserted at 9.7s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.75,
+      "score": 57.07959155241649,
+      "detail": "75% ta inserted at 8.9s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.75,
+      "score": 43.26313429408603,
+      "detail": "75% ta inserted at 7.4s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 1.0,
+      "score": 65.11897015571594,
+      "detail": "100% (hi)"
+    },
+    {
+      "lang": "hi",
+      "proportion": 1.0,
+      "score": 63.6807255744934,
+      "detail": "100% (hi)"
+    },
+    {
+      "lang": "hi",
+      "proportion": 1.0,
+      "score": 60.0,
+      "detail": "100% (hi)"
+    },
+    {
+      "lang": "ta",
+      "proportion": 1.0,
+      "score": 64.05430483818054,
+      "detail": "100% (ta)"
+    },
+    {
+      "lang": "ta",
+      "proportion": 1.0,
+      "score": 60.0,
+      "detail": "100% (ta)"
+    },
+    {
+      "lang": "ta",
+      "proportion": 1.0,
+      "score": 70.0,
+      "detail": "100% (ta)"
+    }
+  ],
+  "fairness": [
+    {
+      "group": "US English (FLEURS en_us)",
+      "score": 0.0,
+      "mean_p_non_en": 0.012561461888253689
+    },
+    {
+      "group": "US English (FLEURS en_us)",
+      "score": 0.0,
+      "mean_p_non_en": 0.009258375503122807
+    },
+    {
+      "group": "US English (FLEURS en_us)",
+      "score": 0.0,
+      "mean_p_non_en": 0.012034472078084946
+    },
+    {
+      "group": "US English (FLEURS en_us)",
+      "score": 0.0,
+      "mean_p_non_en": 0.007011669687926769
+    },
+    {
+      "group": "US English (FLEURS en_us)",
+      "score": 0.0,
+      "mean_p_non_en": 0.01073998212814331
+    },
+    {
+      "group": "US English (FLEURS en_us)",
+      "score": 0.0,
+      "mean_p_non_en": 0.007097314577549696
+    },
+    {
+      "group": "US English (FLEURS en_us)",
+      "score": 0.0,
+      "mean_p_non_en": 0.006286077667027712
+    },
+    {
+      "group": "US English (FLEURS en_us)",
+      "score": 0.0,
+      "mean_p_non_en": 0.008243582211434841
+    },
+    {
+      "group": "US English (FLEURS en_us)",
+      "score": 0.0,
+      "mean_p_non_en": 0.011064539663493633
+    },
+    {
+      "group": "US English (FLEURS en_us)",
+      "score": 0.0,
+      "mean_p_non_en": 0.01473548449575901
+    },
+    {
+      "group": "US English (FLEURS en_us)",
+      "score": 0.0,
+      "mean_p_non_en": 0.015349139459431171
+    },
+    {
+      "group": "US English (FLEURS en_us)",
+      "score": 0.0,
+      "mean_p_non_en": 0.02133503369987011
+    }
+  ],
+  "code_switch": [
+    {
+      "lang": "hi",
+      "n_switches": 1,
+      "share": 0.015555555555555555,
+      "score": 0.0
+    },
+    {
+      "lang": "ta",
+      "n_switches": 1,
+      "share": 0.015555555555555555,
+      "score": 0.0
+    },
+    {
+      "lang": "hi",
+      "n_switches": 2,
+      "share": 0.03111111111111111,
+      "score": 0.0
+    },
+    {
+      "lang": "ta",
+      "n_switches": 2,
+      "share": 0.03111111111111111,
+      "score": 0.0
+    },
+    {
+      "lang": "hi",
+      "n_switches": 4,
+      "share": 0.06222222222222222,
+      "score": 0.0
+    },
+    {
+      "lang": "ta",
+      "n_switches": 4,
+      "share": 0.06222222222222222,
+      "score": 0.0
+    },
+    {
+      "lang": "hi",
+      "n_switches": 6,
+      "share": 0.09333333333333334,
+      "score": 39.266525308291115
+    },
+    {
+      "lang": "ta",
+      "n_switches": 6,
+      "share": 0.09333333333333334,
+      "score": 0.0
+    }
+  ]
+}
