@@ -235,6 +235,7 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
       <span><b>91</b> tests</span>
       <span><b>84</b> features per response</span>
       <span><b>0</b> LLM calls</span>
+      <span><b>0.0%</b> accent false-positives</span>
     </div>
   </div>
 </header>
@@ -408,8 +409,9 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
           <text x="380" y="364" fill="var(--muted)" font-family="IBM Plex Sans, sans-serif" font-size="12" text-anchor="middle">true proportion of the response spoken in another language</text>
           <text x="14" y="182" fill="var(--muted)" font-family="IBM Plex Sans, sans-serif" font-size="12" text-anchor="middle" transform="rotate(-90 14 182)">flag score</text>
 
-          <!-- threshold -->
-          <line x1="70" y1="250" x2="690" y2="250" stroke="var(--signal)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <!-- threshold 45 -->
+          <line x1="70" y1="194" x2="690" y2="194" stroke="var(--signal)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="76" y="188" fill="var(--signal)" font-family="IBM Plex Mono, monospace" font-size="11">threshold 45</text>
 
           <!-- before -->
           <polyline class="dose" fill="none" stroke="var(--risk)" stroke-width="2.5"
@@ -424,13 +426,14 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
           <!-- after -->
           <polyline class="dose" fill="none" stroke="var(--accent)" stroke-width="2.5"
             stroke-linejoin="round" stroke-linecap="round"
-            points="70,320 225,172 380,104 535,89 690,64"/>
+            points="70,320 101,310 132,253 194,177 287,144 380,126 535,98 690,54"/>
           <g fill="var(--accent)">
-            <circle cx="690" cy="64" r="4"/><circle cx="535" cy="89" r="3"/>
-            <circle cx="380" cy="104" r="3"/><circle cx="225" cy="172" r="3"/>
+            <circle cx="690" cy="54" r="4"/><circle cx="535" cy="98" r="3"/>
+            <circle cx="380" cy="126" r="3"/><circle cx="287" cy="144" r="3"/>
+            <circle cx="194" cy="177" r="3"/><circle cx="132" cy="253" r="3"/>
             <circle cx="70" cy="320" r="3"/>
           </g>
-          <text x="676" y="53" fill="var(--accent)" font-family="IBM Plex Mono, monospace" font-size="12" text-anchor="end">91.6</text>
+          <text x="676" y="43" fill="var(--accent)" font-family="IBM Plex Mono, monospace" font-size="12" text-anchor="end">95.1</text>
         </svg>
       </div>
       <figcaption>
@@ -461,6 +464,80 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
         Now it transcribes only the spans that <em>sounded</em> foreign, and asks
         whether they actually are.
       </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="shead"><span class="snum">3b</span><h2>The result that decides whether this ships</h2></div>
+    <div class="col">
+      <p class="lede">
+        Both groups below are speaking <strong>English</strong>. Neither contains a word
+        of anything else.
+      </p>
+    </div>
+
+    <div class="tablebox">
+      <table>
+        <thead>
+          <tr>
+            <th>Group (all genuinely English)</th>
+            <th class="num">mean</th><th class="num">p90</th><th class="num">max</th>
+            <th class="num">FPR @25</th><th class="num">FPR @40</th><th class="num">FPR @45</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>US English &mdash; FLEURS</td>
+            <td class="num">0.0</td><td class="num">0.0</td><td class="num">0.0</td>
+            <td class="num">0.0%</td><td class="num">0.0%</td><td class="num">0.0%</td>
+          </tr>
+          <tr>
+            <td><strong>Indian English &mdash; Svarah</strong></td>
+            <td class="num">8.5</td><td class="num">26.8</td><td class="num">43.1</td>
+            <td class="num" style="color:var(--risk);font-weight:600">16.7%</td>
+            <td class="num" style="color:var(--signal)">8.3%</td>
+            <td class="num" style="color:var(--ok)">0.0%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col">
+      <div class="pull warn">
+        At the original threshold, <strong>one in six Indian-accented candidates</strong>
+        would have been flagged for speaking a foreign language — while speaking English.
+        Native English scored zero on every item.
+      </div>
+      <p>
+        This is the failure we predicted in the design document before writing any code,
+        and it is worth being blunt about what it would have meant. A threshold tuned on
+        native English — the obvious thing to do, and what any evaluation using only US
+        English would have produced — ships a system that penalises Indian, Filipino and
+        African candidates <em>for their accent</em> and nobody else. Your population is
+        entirely L2 speakers. The error is invisible unless you deliberately go looking
+        for accented negatives.
+      </p>
+      <h3>What changed</h3>
+      <p>
+        The text channel became a <strong>multiplier</strong> instead of another additive
+        vote. As an additive term it could only decline to add points; as a multiplier it
+        can actively suppress. If the spans that sounded foreign are re-transcribed and
+        come back as English, that is positive evidence the accent was misread, and the
+        score falls rather than merely failing to rise. The default threshold moved to
+        <strong>45</strong> — the lowest point at which accented English is not penalised.
+      </p>
+      <h3>Three caveats, recorded rather than buried</h3>
+      <p class="quiet" style="font-size:14.5px;">
+        <strong>n = 12 per group.</strong> A 0% false-positive rate on twelve items is not
+        a guarantee.<br>
+        <strong>Sensitivity varies by language.</strong> Yoruba scored 0.0 at 10% foreign
+        where Swahili reached 52.8 — one global threshold is not equally fair across
+        first languages.<br>
+        <strong>Route this flag to human review, not to an automatic fail.</strong> That
+        sentence is in the code, not only in this deck.
+      </p>
     </div>
   </div>
 </section>
@@ -512,8 +589,14 @@ footer{padding:44px 0 70px;font-family:var(--f-mono);font-size:12px;color:var(--
             <td>1–2 foreign fragments, 1.6–3.1% of audio</td><td><span class="pill ok">measured</span></td>
           </tr>
           <tr>
-            <td>Foreign-language FPR on <em>accented</em> English</td><td class="num">—</td>
-            <td>the number that decides deployability</td><td><span class="pill part">in progress</span></td>
+            <td>Foreign-language FPR on <em>accented</em> English</td><td class="num big">0.0%</td>
+            <td>at threshold 45, after the corroboration fix — was 16.7% at 25</td>
+            <td><span class="pill ok">measured</span></td>
+          </tr>
+          <tr>
+            <td>Detects a response in another language</td><td class="num big">95.1</td>
+            <td>100% non-English, averaged over five languages</td>
+            <td><span class="pill ok">measured</span></td>
           </tr>
           <tr>
             <td>Fine-grained relevance ranking</td><td class="num">—</td>

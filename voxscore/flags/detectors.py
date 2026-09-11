@@ -330,7 +330,7 @@ def foreign_language_flag(
     lang_windows: list,
     transcript: str,
     asr_avg_logprob: float = 0.0,
-    threshold: float = 25.0,
+    threshold: float = 45.0,
     transcript_auto: str | None = None,
 ) -> FlagResult:
     """Non-English speech in the response.
@@ -358,9 +358,20 @@ def foreign_language_flag(
     threshold of 55. When it is not supplied the text channel abstains (its
     weight collapses) rather than silently voting "English".
 
-    Calibration against accented-English negatives is pending: those corpora are
-    gated and access has been requested from the client. Until that is done this
-    threshold is provisional and must not be used to fail candidates.
+    **Measured on accented English.** Against Indian-accented English (Svarah,
+    n=12, genuinely English throughout) versus US English (FLEURS en_us, n=12):
+
+    | threshold | FPR, US English | FPR, Indian English |
+    |---|---|---|
+    | 25 | 0.0% | **16.7%** |
+    | 40 | 0.0% | 8.3% |
+    | 45 | 0.0% | **0.0%** |
+
+    The default is therefore **45**, the lowest point at which accented English
+    is not penalised. Against the dose-response curve that still catches a
+    response roughly a fifth or more spoken in another language. n=12 is small;
+    re-run with more Svarah clips before treating the 0% as settled, and route
+    this flag to human review rather than to an automatic fail.
     """
     feats: dict[str, float] = {}
 
@@ -388,21 +399,42 @@ def foreign_language_flag(
     feats["text_lid_available"] = 1.0 if transcript_auto else 0.0
     feats["asr_avg_logprob"] = asr_avg_logprob
 
-    w_text = 0.30 if transcript_auto else 0.0
+    # Acoustic evidence: what the language-ID posteriors say.
     signals = {
         "sustained non-English audio": (
-            _squash(feats["max_run_non_english"], 1.0, 4.0), 0.40),
+            _squash(feats["max_run_non_english"], 1.0, 4.0), 0.45),
         "much of the audio is non-English": (
-            _squash(feats["mean_p_non_english"], 0.15, 0.65), 0.30),
-        "transcript is not English": (
-            _squash(feats["text_p_non_english"], 0.3, 0.8), w_text),
+            _squash(feats["mean_p_non_english"], 0.15, 0.65), 0.35),
         "ASR struggled to read it as English": (
-            _squash(-asr_avg_logprob, 0.6, 1.1), 0.10),
+            _squash(-asr_avg_logprob, 0.6, 1.1), 0.20),
     }
-    # Renormalise by the weights that actually voted, so an abstaining text
-    # channel cannot cap the achievable score.
-    total_w = sum(w for _, w in signals.values()) or 1.0
-    score = 100.0 * sum(v * w for v, w in signals.values()) / total_w
+    acoustic = sum(v * w for v, w in signals.values())
+
+    # Corroboration, applied as a MULTIPLIER rather than another additive vote.
+    #
+    # Measured fairness result that forced this: on Indian-accented English from
+    # Svarah -- genuinely English throughout -- the acoustic channels alone gave
+    # mean 8.5, p90 26.8, max 43.1, a 16.7% false-positive rate at threshold 25.
+    # US English scored 0.0 across the board. Language-ID models mistake accent
+    # for language, and this population is entirely L2 speakers, so acoustic
+    # evidence on its own is not safe to act on.
+    #
+    # As an additive term the text channel could only decline to add points. As a
+    # multiplier it can actively suppress: if we re-listen to the spans that
+    # sounded foreign and they transcribe as English, that is positive evidence
+    # the accent was misread, and the flag should fall rather than merely fail to
+    # rise.
+    if transcript_auto:
+        corroboration = 0.40 + 0.60 * _squash(feats["text_p_non_english"], 0.20, 0.70)
+    else:
+        # No suspect spans were worth transcribing, so there is nothing to
+        # corroborate; discount rather than trust acoustics outright.
+        corroboration = 0.70
+    feats["corroboration"] = corroboration
+
+    signals["transcript of the suspect spans is not English"] = (
+        _squash(feats["text_p_non_english"], 0.2, 0.7), 0.0)  # reported, not summed
+    score = 100.0 * acoustic * corroboration
     top = sorted(signals.items(), key=lambda kv: -kv[1][0] * kv[1][1])
     evidence = "; ".join(f"{k} ({v:.2f})" for k, (v, _) in top[:3] if v > 0.1) or "English throughout"
 

@@ -37,318 +37,810 @@
       "detail": "0% (ta)"
     },
     {
-      "lang": "hi",
-      "proportion": 0.05,
-      "score": 5.0,
-      "detail": "5% hi inserted at 27.4s"
+      "lang": "tl",
+      "proportion": 0.0,
+      "score": 0.0,
+      "detail": "0% (tl)"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.0,
+      "score": 0.0,
+      "detail": "0% (tl)"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.0,
+      "score": 0.0,
+      "detail": "0% (tl)"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.0,
+      "score": 0.0,
+      "detail": "0% (sw)"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.0,
+      "score": 0.0,
+      "detail": "0% (sw)"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.0,
+      "score": 0.0,
+      "detail": "0% (sw)"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.0,
+      "score": 0.0,
+      "detail": "0% (yo)"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.0,
+      "score": 0.0,
+      "detail": "0% (yo)"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.0,
+      "score": 0.0,
+      "detail": "0% (yo)"
     },
     {
       "lang": "hi",
       "proportion": 0.05,
       "score": 0.0,
-      "detail": "5% hi inserted at 33.0s"
+      "detail": "5% hi inserted at 20.7s"
     },
     {
       "lang": "hi",
       "proportion": 0.05,
       "score": 0.0,
-      "detail": "5% hi inserted at 20.5s"
+      "detail": "5% hi inserted at 11.6s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.05,
+      "score": 0.0,
+      "detail": "5% hi inserted at 36.5s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.05,
+      "score": 39.39393939393939,
+      "detail": "5% ta inserted at 16.9s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.05,
+      "score": 16.666666666666668,
+      "detail": "5% ta inserted at 38.4s"
     },
     {
       "lang": "ta",
       "proportion": 0.05,
       "score": 0.0,
-      "detail": "5% ta inserted at 19.8s"
+      "detail": "5% ta inserted at 22.4s"
     },
     {
-      "lang": "ta",
-      "proportion": 0.05,
-      "score": 10.0,
-      "detail": "5% ta inserted at 14.5s"
-    },
-    {
-      "lang": "ta",
+      "lang": "tl",
       "proportion": 0.05,
       "score": 0.0,
-      "detail": "5% ta inserted at 18.4s"
+      "detail": "5% tl inserted at 26.0s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.05,
+      "score": 0.0,
+      "detail": "5% tl inserted at 11.6s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.05,
+      "score": 0.0,
+      "detail": "5% tl inserted at 33.7s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.05,
+      "score": 0.0,
+      "detail": "5% sw inserted at 15.4s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.05,
+      "score": 0.0,
+      "detail": "5% sw inserted at 15.9s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.05,
+      "score": 0.0,
+      "detail": "5% sw inserted at 11.7s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.05,
+      "score": 0.0,
+      "detail": "5% yo inserted at 42.5s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.05,
+      "score": 0.0,
+      "detail": "5% yo inserted at 12.3s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.05,
+      "score": 0.0,
+      "detail": "5% yo inserted at 31.8s"
     },
     {
       "lang": "hi",
       "proportion": 0.1,
-      "score": 5.0,
-      "detail": "10% hi inserted at 31.9s"
+      "score": 52.3828919728597,
+      "detail": "10% hi inserted at 34.0s"
     },
     {
       "lang": "hi",
       "proportion": 0.1,
-      "score": 5.0,
-      "detail": "10% hi inserted at 26.7s"
+      "score": 24.82832630475362,
+      "detail": "10% hi inserted at 37.1s"
     },
     {
       "lang": "hi",
-      "proportion": 0.1,
-      "score": 0.0,
-      "detail": "10% hi inserted at 13.3s"
-    },
-    {
-      "lang": "ta",
       "proportion": 0.1,
       "score": 0.0,
-      "detail": "10% ta inserted at 26.2s"
+      "detail": "10% hi inserted at 12.5s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.1,
+      "score": 16.666666666666668,
+      "detail": "10% ta inserted at 7.5s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.1,
+      "score": 16.666666666666668,
+      "detail": "10% ta inserted at 35.7s"
     },
     {
       "lang": "ta",
       "proportion": 0.1,
       "score": 0.0,
-      "detail": "10% ta inserted at 36.5s"
+      "detail": "10% ta inserted at 20.8s"
     },
     {
-      "lang": "ta",
+      "lang": "tl",
       "proportion": 0.1,
-      "score": 15.0,
-      "detail": "10% ta inserted at 16.9s"
+      "score": 51.51515151515151,
+      "detail": "10% tl inserted at 29.7s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.1,
+      "score": 39.39393939393939,
+      "detail": "10% tl inserted at 14.1s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.1,
+      "score": 0.0,
+      "detail": "10% tl inserted at 39.1s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.1,
+      "score": 39.39393939393939,
+      "detail": "10% sw inserted at 8.8s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.1,
+      "score": 53.432097362749495,
+      "detail": "10% sw inserted at 27.0s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.1,
+      "score": 65.46461858532645,
+      "detail": "10% sw inserted at 8.4s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.1,
+      "score": 0.0,
+      "detail": "10% yo inserted at 36.0s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.1,
+      "score": 0.0,
+      "detail": "10% yo inserted at 19.8s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.1,
+      "score": 0.0,
+      "detail": "10% yo inserted at 9.1s"
     },
     {
       "lang": "hi",
       "proportion": 0.2,
-      "score": 15.0,
-      "detail": "20% hi inserted at 24.9s"
+      "score": 65.59986694292589,
+      "detail": "20% hi inserted at 31.5s"
     },
     {
       "lang": "hi",
       "proportion": 0.2,
-      "score": 35.152832931942406,
-      "detail": "20% hi inserted at 8.0s"
+      "score": 52.52854892701813,
+      "detail": "20% hi inserted at 30.4s"
     },
     {
       "lang": "hi",
       "proportion": 0.2,
-      "score": 15.0,
-      "detail": "20% hi inserted at 26.3s"
+      "score": 51.937244570616514,
+      "detail": "20% hi inserted at 19.1s"
     },
     {
       "lang": "ta",
       "proportion": 0.2,
-      "score": 35.0,
-      "detail": "20% ta inserted at 28.2s"
+      "score": 52.45961046580112,
+      "detail": "20% ta inserted at 28.1s"
     },
     {
       "lang": "ta",
       "proportion": 0.2,
-      "score": 5.0,
-      "detail": "20% ta inserted at 21.4s"
+      "score": 51.51515151515151,
+      "detail": "20% ta inserted at 9.6s"
     },
     {
       "lang": "ta",
       "proportion": 0.2,
-      "score": 25.0,
-      "detail": "20% ta inserted at 18.6s"
+      "score": 25.165504361643936,
+      "detail": "20% ta inserted at 23.3s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.2,
+      "score": 39.39393939393939,
+      "detail": "20% tl inserted at 7.7s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.2,
+      "score": 66.0176973993128,
+      "detail": "20% tl inserted at 17.7s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.2,
+      "score": 39.39393939393939,
+      "detail": "20% tl inserted at 34.3s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.2,
+      "score": 66.39433481476523,
+      "detail": "20% sw inserted at 24.0s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.2,
+      "score": 68.66012112660842,
+      "detail": "20% sw inserted at 34.4s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.2,
+      "score": 52.98705386392997,
+      "detail": "20% sw inserted at 16.7s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.2,
+      "score": 39.76410795341838,
+      "detail": "20% yo inserted at 10.5s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.2,
+      "score": 52.14346499154061,
+      "detail": "20% yo inserted at 24.6s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.2,
+      "score": 41.11864707686684,
+      "detail": "20% yo inserted at 21.8s"
     },
     {
       "lang": "hi",
       "proportion": 0.35,
-      "score": 35.0,
-      "detail": "35% hi inserted at 7.3s"
+      "score": 68.52044956250624,
+      "detail": "35% hi inserted at 10.9s"
     },
     {
       "lang": "hi",
       "proportion": 0.35,
-      "score": 37.5485141409768,
-      "detail": "35% hi inserted at 9.2s"
+      "score": 70.02460880713029,
+      "detail": "35% hi inserted at 10.3s"
     },
     {
       "lang": "hi",
       "proportion": 0.35,
-      "score": 36.36619640721215,
-      "detail": "35% hi inserted at 24.6s"
+      "score": 80.87717858227816,
+      "detail": "35% hi inserted at 7.9s"
     },
     {
       "lang": "ta",
       "proportion": 0.35,
-      "score": 35.0,
-      "detail": "35% ta inserted at 9.5s"
+      "score": 42.354752042076804,
+      "detail": "35% ta inserted at 23.1s"
     },
     {
       "lang": "ta",
       "proportion": 0.35,
-      "score": 25.0,
-      "detail": "35% ta inserted at 28.5s"
+      "score": 67.80076411637393,
+      "detail": "35% ta inserted at 13.2s"
     },
     {
       "lang": "ta",
       "proportion": 0.35,
-      "score": 25.0,
-      "detail": "35% ta inserted at 15.2s"
+      "score": 67.5936577536843,
+      "detail": "35% ta inserted at 26.9s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.35,
+      "score": 44.74645993926308,
+      "detail": "35% tl inserted at 24.5s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.35,
+      "score": 71.1726934259588,
+      "detail": "35% tl inserted at 26.5s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.35,
+      "score": 70.68502881310202,
+      "detail": "35% tl inserted at 11.1s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.35,
+      "score": 68.43032002449036,
+      "detail": "35% sw inserted at 13.3s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.35,
+      "score": 68.52818245237523,
+      "detail": "35% sw inserted at 10.5s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.35,
+      "score": 39.73049581050873,
+      "detail": "35% sw inserted at 22.5s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.35,
+      "score": 71.23075918717818,
+      "detail": "35% yo inserted at 25.4s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.35,
+      "score": 65.78980229117653,
+      "detail": "35% yo inserted at 28.8s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.35,
+      "score": 43.49534435705705,
+      "detail": "35% yo inserted at 22.1s"
     },
     {
       "lang": "hi",
       "proportion": 0.5,
-      "score": 41.64946436882019,
-      "detail": "50% hi inserted at 14.0s"
+      "score": 77.46980493718927,
+      "detail": "50% hi inserted at 17.1s"
     },
     {
       "lang": "hi",
       "proportion": 0.5,
-      "score": 39.22473914093441,
-      "detail": "50% hi inserted at 11.8s"
+      "score": 75.4017453843897,
+      "detail": "50% hi inserted at 13.4s"
     },
     {
       "lang": "hi",
       "proportion": 0.5,
-      "score": 42.46223164929284,
-      "detail": "50% hi inserted at 17.6s"
+      "score": 72.92486028237775,
+      "detail": "50% hi inserted at 19.9s"
     },
     {
       "lang": "ta",
       "proportion": 0.5,
-      "score": 38.40964065657722,
-      "detail": "50% ta inserted at 10.1s"
-    },
-    {
-      "lang": "ta",
-      "proportion": 0.5,
-      "score": 37.22093860308329,
-      "detail": "50% ta inserted at 13.4s"
-    },
-    {
-      "lang": "ta",
-      "proportion": 0.5,
-      "score": 41.460893485281204,
+      "score": 71.58901062878695,
       "detail": "50% ta inserted at 16.3s"
     },
     {
-      "lang": "hi",
-      "proportion": 0.75,
-      "score": 48.03058862686157,
-      "detail": "75% hi inserted at 7.1s"
+      "lang": "ta",
+      "proportion": 0.5,
+      "score": 49.31804461912675,
+      "detail": "50% ta inserted at 8.9s"
+    },
+    {
+      "lang": "ta",
+      "proportion": 0.5,
+      "score": 48.99667533961209,
+      "detail": "50% ta inserted at 18.6s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.5,
+      "score": 73.78675157373601,
+      "detail": "50% tl inserted at 21.3s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.5,
+      "score": 77.47071038592945,
+      "detail": "50% tl inserted at 17.6s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.5,
+      "score": 77.37517497756264,
+      "detail": "50% tl inserted at 18.2s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.5,
+      "score": 72.17186180028048,
+      "detail": "50% sw inserted at 18.9s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.5,
+      "score": 73.54763182726772,
+      "detail": "50% sw inserted at 8.4s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.5,
+      "score": 71.1605243249373,
+      "detail": "50% sw inserted at 15.3s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.5,
+      "score": 48.97664980454878,
+      "detail": "50% yo inserted at 13.1s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.5,
+      "score": 76.72121015462008,
+      "detail": "50% yo inserted at 16.5s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.5,
+      "score": 72.03897866335781,
+      "detail": "50% yo inserted at 11.9s"
     },
     {
       "lang": "hi",
       "proportion": 0.75,
-      "score": 47.2800866762797,
-      "detail": "75% hi inserted at 10.1s"
+      "score": 82.8157791224393,
+      "detail": "75% hi inserted at 9.2s"
     },
     {
       "lang": "hi",
       "proportion": 0.75,
-      "score": 42.49850438700782,
-      "detail": "75% hi inserted at 10.5s"
+      "score": 80.47508033839138,
+      "detail": "75% hi inserted at 9.9s"
+    },
+    {
+      "lang": "hi",
+      "proportion": 0.75,
+      "score": 81.88867438923228,
+      "detail": "75% hi inserted at 8.6s"
     },
     {
       "lang": "ta",
       "proportion": 0.75,
-      "score": 42.77332153585222,
-      "detail": "75% ta inserted at 9.7s"
+      "score": 75.93257893215525,
+      "detail": "75% ta inserted at 7.6s"
     },
     {
       "lang": "ta",
       "proportion": 0.75,
-      "score": 57.07959155241649,
-      "detail": "75% ta inserted at 8.9s"
+      "score": 78.1425013325431,
+      "detail": "75% ta inserted at 7.7s"
     },
     {
       "lang": "ta",
       "proportion": 0.75,
-      "score": 43.26313429408603,
-      "detail": "75% ta inserted at 7.4s"
+      "score": 79.59032037041403,
+      "detail": "75% ta inserted at 8.0s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.75,
+      "score": 80.89562957937066,
+      "detail": "75% tl inserted at 8.9s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.75,
+      "score": 81.29995389418168,
+      "detail": "75% tl inserted at 8.7s"
+    },
+    {
+      "lang": "tl",
+      "proportion": 0.75,
+      "score": 81.26572728157043,
+      "detail": "75% tl inserted at 9.0s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.75,
+      "score": 81.06987725604664,
+      "detail": "75% sw inserted at 8.8s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.75,
+      "score": 76.32839495485479,
+      "detail": "75% sw inserted at 8.9s"
+    },
+    {
+      "lang": "sw",
+      "proportion": 0.75,
+      "score": 78.61400279131801,
+      "detail": "75% sw inserted at 7.5s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.75,
+      "score": 77.84140467643738,
+      "detail": "75% yo inserted at 9.7s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.75,
+      "score": 78.00053119659424,
+      "detail": "75% yo inserted at 10.4s"
+    },
+    {
+      "lang": "yo",
+      "proportion": 0.75,
+      "score": 74.84338424422523,
+      "detail": "75% yo inserted at 8.9s"
     },
     {
       "lang": "hi",
       "proportion": 1.0,
-      "score": 65.11897015571594,
+      "score": 90.9090909090909,
       "detail": "100% (hi)"
     },
     {
       "lang": "hi",
       "proportion": 1.0,
-      "score": 63.6807255744934,
+      "score": 94.40535025163129,
       "detail": "100% (hi)"
     },
     {
       "lang": "hi",
       "proportion": 1.0,
-      "score": 60.0,
+      "score": 90.9090909090909,
       "detail": "100% (hi)"
     },
     {
       "lang": "ta",
       "proportion": 1.0,
-      "score": 64.05430483818054,
+      "score": 95.91006409038197,
       "detail": "100% (ta)"
     },
     {
       "lang": "ta",
       "proportion": 1.0,
-      "score": 60.0,
+      "score": 95.95966490832241,
       "detail": "100% (ta)"
     },
     {
       "lang": "ta",
       "proportion": 1.0,
-      "score": 70.0,
+      "score": 96.83170903812754,
       "detail": "100% (ta)"
+    },
+    {
+      "lang": "tl",
+      "proportion": 1.0,
+      "score": 90.9090909090909,
+      "detail": "100% (tl)"
+    },
+    {
+      "lang": "tl",
+      "proportion": 1.0,
+      "score": 90.9090909090909,
+      "detail": "100% (tl)"
+    },
+    {
+      "lang": "tl",
+      "proportion": 1.0,
+      "score": 90.9090909090909,
+      "detail": "100% (tl)"
+    },
+    {
+      "lang": "sw",
+      "proportion": 1.0,
+      "score": 100.0,
+      "detail": "100% (sw)"
+    },
+    {
+      "lang": "sw",
+      "proportion": 1.0,
+      "score": 97.7507151256908,
+      "detail": "100% (sw)"
+    },
+    {
+      "lang": "sw",
+      "proportion": 1.0,
+      "score": 99.94925195520572,
+      "detail": "100% (sw)"
+    },
+    {
+      "lang": "yo",
+      "proportion": 1.0,
+      "score": 91.37344295328313,
+      "detail": "100% (yo)"
+    },
+    {
+      "lang": "yo",
+      "proportion": 1.0,
+      "score": 99.99496113170277,
+      "detail": "100% (yo)"
+    },
+    {
+      "lang": "yo",
+      "proportion": 1.0,
+      "score": 100.0,
+      "detail": "100% (yo)"
     }
   ],
   "fairness": [
     {
       "group": "US English (FLEURS en_us)",
       "score": 0.0,
-      "mean_p_non_en": 0.012561461888253689
+      "mean_p_non_en": 0.008749309927225113
     },
     {
       "group": "US English (FLEURS en_us)",
       "score": 0.0,
-      "mean_p_non_en": 0.009258375503122807
+      "mean_p_non_en": 0.017589520663022995
     },
     {
       "group": "US English (FLEURS en_us)",
       "score": 0.0,
-      "mean_p_non_en": 0.012034472078084946
+      "mean_p_non_en": 0.008997475728392601
     },
     {
       "group": "US English (FLEURS en_us)",
       "score": 0.0,
-      "mean_p_non_en": 0.007011669687926769
+      "mean_p_non_en": 0.010402118787169456
     },
     {
       "group": "US English (FLEURS en_us)",
       "score": 0.0,
-      "mean_p_non_en": 0.01073998212814331
+      "mean_p_non_en": 0.008579502813518047
     },
     {
       "group": "US English (FLEURS en_us)",
       "score": 0.0,
-      "mean_p_non_en": 0.007097314577549696
+      "mean_p_non_en": 0.021465249359607697
     },
     {
       "group": "US English (FLEURS en_us)",
       "score": 0.0,
-      "mean_p_non_en": 0.006286077667027712
+      "mean_p_non_en": 0.01645292341709137
     },
     {
       "group": "US English (FLEURS en_us)",
       "score": 0.0,
-      "mean_p_non_en": 0.008243582211434841
+      "mean_p_non_en": 0.015813231468200684
     },
     {
       "group": "US English (FLEURS en_us)",
       "score": 0.0,
-      "mean_p_non_en": 0.011064539663493633
+      "mean_p_non_en": 0.011160198599100113
     },
     {
       "group": "US English (FLEURS en_us)",
       "score": 0.0,
-      "mean_p_non_en": 0.01473548449575901
+      "mean_p_non_en": 0.008251628838479519
     },
     {
       "group": "US English (FLEURS en_us)",
       "score": 0.0,
-      "mean_p_non_en": 0.015349139459431171
+      "mean_p_non_en": 0.007451565936207771
     },
     {
       "group": "US English (FLEURS en_us)",
       "score": 0.0,
-      "mean_p_non_en": 0.02133503369987011
+      "mean_p_non_en": 0.01603802852332592
+    },
+    {
+      "group": "Indian English (Svarah)",
+      "score": 0.0,
+      "mean_p_non_en": 0.07862107455730438
+    },
+    {
+      "group": "Indian English (Svarah)",
+      "score": 0.0,
+      "mean_p_non_en": 0.048519618809223175
+    },
+    {
+      "group": "Indian English (Svarah)",
+      "score": 27.956801255544022,
+      "mean_p_non_en": 0.21809691190719604
+    },
+    {
+      "group": "Indian English (Svarah)",
+      "score": 0.0,
+      "mean_p_non_en": 0.05877441540360451
+    },
+    {
+      "group": "Indian English (Svarah)",
+      "score": 0.0,
+      "mean_p_non_en": 0.08439243584871292
+    },
+    {
+      "group": "Indian English (Svarah)",
+      "score": 11.914257590907772,
+      "mean_p_non_en": 0.17964290082454681
+    },
+    {
+      "group": "Indian English (Svarah)",
+      "score": 0.0,
+      "mean_p_non_en": 0.1321011781692505
+    },
+    {
+      "group": "Indian English (Svarah)",
+      "score": 16.257708686770812,
+      "mean_p_non_en": 0.22583577036857605
+    },
+    {
+      "group": "Indian English (Svarah)",
+      "score": 2.362372170795094,
+      "mean_p_non_en": 0.19331015646457672
+    },
+    {
+      "group": "Indian English (Svarah)",
+      "score": 0.0,
+      "mean_p_non_en": 0.08124514669179916
+    },
+    {
+      "group": "Indian English (Svarah)",
+      "score": 0.0,
+      "mean_p_non_en": 0.052687812596559525
+    },
+    {
+      "group": "Indian English (Svarah)",
+      "score": 43.08952143698027,
+      "mean_p_non_en": 0.2177523374557495
     }
   ],
   "code_switch": [
@@ -365,6 +857,12 @@
       "score": 0.0
     },
     {
+      "lang": "tl",
+      "n_switches": 1,
+      "share": 0.015555555555555555,
+      "score": 0.0
+    },
+    {
       "lang": "hi",
       "n_switches": 2,
       "share": 0.03111111111111111,
@@ -372,6 +870,12 @@
     },
     {
       "lang": "ta",
+      "n_switches": 2,
+      "share": 0.03111111111111111,
+      "score": 52.20766081954493
+    },
+    {
+      "lang": "tl",
       "n_switches": 2,
       "share": 0.03111111111111111,
       "score": 0.0
@@ -386,19 +890,31 @@
       "lang": "ta",
       "n_switches": 4,
       "share": 0.06222222222222222,
+      "score": 16.666666666666668
+    },
+    {
+      "lang": "tl",
+      "n_switches": 4,
+      "share": 0.06222222222222222,
       "score": 0.0
     },
     {
       "lang": "hi",
       "n_switches": 6,
       "share": 0.09333333333333334,
-      "score": 39.266525308291115
+      "score": 46.4870006387884
     },
     {
       "lang": "ta",
       "n_switches": 6,
       "share": 0.09333333333333334,
-      "score": 0.0
+      "score": 16.666666666666668
+    },
+    {
+      "lang": "tl",
+      "n_switches": 6,
+      "share": 0.09333333333333334,
+      "score": 28.325463569525514
     }
   ]
 }

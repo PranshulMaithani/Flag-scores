@@ -483,6 +483,67 @@ The experiment that actually decides deployability -- false-positive rate on
 **Indian-accented English** -- is still blocked on the Svarah download. Until that
 number exists, this flag must not be used to fail anyone, and the code says so.
 
+---
+
+## 2026-09-11 — Day 0 (cont.): the fairness risk was real, and it is measured
+
+Svarah finished downloading. Ran the full experiment: five foreign languages at eight
+proportions, plus both English groups.
+
+### Dose-response, after the span-targeted fix
+| true % non-English | hi | ta | tl | sw | yo | mean |
+|---|---|---|---|---|---|---|
+| 0% | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | **0.0** |
+| 10% | 25.7 | 11.1 | 30.3 | 52.8 | 0.0 | 24.0 |
+| 20% | 56.7 | 43.0 | 48.3 | 62.7 | 44.3 | 51.0 |
+| 35% | 73.1 | 59.2 | 62.2 | 58.9 | 60.2 | 62.7 |
+| 50% | 75.3 | 56.6 | 76.2 | 72.3 | 65.9 | 69.3 |
+| 75% | 81.7 | 77.9 | 81.2 | 78.7 | 76.9 | 79.3 |
+| **100%** | 92.1 | 96.2 | 90.9 | 99.2 | 97.1 | **95.1** |
+
+Full dynamic range recovered (0 to 95, against 0 to 63.8 before). Detection is weakest
+on **Yoruba** -- 0.0 at 10%, where Swahili reaches 52.8 -- so sensitivity is materially
+language-dependent and a single global threshold treats languages unequally.
+
+### The result that decides everything
+Both groups below are speaking **English**.
+
+| group | mean | p90 | max | FPR@25 | FPR@40 | FPR@55 |
+|---|---|---|---|---|---|---|
+| US English (FLEURS) | 0.0 | 0.0 | 0.0 | 0.0% | 0.0% | 0.0% |
+| **Indian English (Svarah)** | 8.5 | 26.8 | 43.1 | **16.7%** | 8.3% | 0.0% |
+
+**At the default threshold of 25, one in six Indian-accented candidates would be
+flagged for speaking a foreign language while speaking English. Native English scored
+zero on every single item.**
+
+This is exactly the failure predicted in DESIGN.md before any code was written, and it
+is worth being blunt about what it means: a threshold tuned on native English -- the
+obvious thing to do, and what any evaluation using only en_us would have produced --
+ships a system that penalises Indian, Filipino and African candidates for their accent
+and nobody else. The population this product serves is *entirely* L2 speakers. The
+error would have been invisible without deliberately seeking out accented negatives.
+
+### Two responses
+
+**1. Structural.** The text channel was an additive term, so the best it could do was
+decline to add points. It is now a **multiplier**. If the spans that sounded foreign
+are re-transcribed and come back as *English*, that is positive evidence the accent was
+misread, and the score should fall rather than merely fail to rise. Acoustic evidence
+alone is not safe to act on for this population, and the scoring now encodes that.
+
+**2. Threshold.** Default raised from 25 to **45** — the lowest point at which accented
+English is not penalised, while still catching a response roughly a fifth or more spoken
+in another language.
+
+### Caveats recorded rather than buried
+- **n = 12 per group.** A 0% false-positive rate on twelve items is not a guarantee.
+  Re-run at higher n before treating it as settled.
+- **Language-dependent sensitivity.** Yoruba detection is much weaker than Swahili; one
+  global threshold is not equally fair across L1s.
+- **This flag should route to human review, not to an automatic fail.** The code carries
+  that statement in its docstring, not only here.
+
 ### The bias trap held
 All three real ideal answers describe a *low-key* birthday. The adversarial "BIG party"
 response scored **at or above** the quiet one on every relevance feature

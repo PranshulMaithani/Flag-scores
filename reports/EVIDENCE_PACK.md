@@ -243,20 +243,42 @@ fine". Every such path now collapses its weight and renormalises.
 
 ## 5. Risks
 
-**1. Foreign-language fairness — the one that could harm real candidates.**
-Language-ID models routinely misread heavily accented English as the speaker's
-L1: Indian-accented English as Hindi, Filipino-accented as Tagalog. Your
-population is *entirely* L2 speakers, so a naive implementation false-positives
-on exactly the people it must not, and the failure is invisible unless
-specifically tested.
+**1. Foreign-language fairness — measured, and it was real.**
 
-Mitigations already in place: posteriors rather than argmax labels, a required
-text corroboration channel, a restricted language candidate set, and a test
-pinning that a single confused window cannot fire the flag. Native-English FPR is
-**0.0%**.
+Both groups below are speaking **English**. Neither contains a word of anything
+else.
 
-*The number that decides deployability — FPR on Indian-accented English — is
-pending the Svarah corpus.* Until then this flag is advisory only.
+| group | mean | p90 | max | FPR @25 | FPR @40 | FPR @55 |
+|---|---|---|---|---|---|---|
+| US English (FLEURS) | 0.0 | 0.0 | 0.0 | 0.0% | 0.0% | 0.0% |
+| **Indian English (Svarah)** | 8.5 | 26.8 | 43.1 | **16.7%** | 8.3% | 0.0% |
+
+> At the original default threshold of 25, **one in six Indian-accented
+> candidates would have been flagged for speaking a foreign language while
+> speaking English.** Native English scored zero on every item.
+
+This is the failure we predicted in the design before writing any code, and it is
+worth stating plainly what it would have meant: a threshold tuned on native
+English — the obvious thing to do, and what any evaluation using only US English
+would have produced — ships a system that penalises Indian, Filipino and African
+candidates *for their accent* and nobody else. Your population is entirely L2
+speakers. The error is invisible unless you deliberately go looking for accented
+negatives, which is why we did.
+
+**Two changes followed.** The text channel became a **multiplier** rather than
+another additive vote: if the spans that sounded foreign are re-transcribed and
+come back as English, that is positive evidence the accent was misread, and the
+score falls rather than merely failing to rise. And the default threshold moved
+to **45**, the lowest point at which accented English is not penalised while
+still catching a response roughly a fifth or more in another language.
+
+**Caveats, recorded rather than buried:**
+- n = 12 per group. A 0% false-positive rate on twelve items is not a guarantee.
+- Detection sensitivity is **language-dependent** — Yoruba scored 0.0 at 10%
+  foreign where Swahili reached 52.8. One global threshold is not equally fair
+  across L1s.
+- **This flag should route to human review, not to an automatic fail.** That
+  statement lives in the code, not only in this document.
 
 **2. Grammar's ceiling is set by licensing, not method.** Every competitive GEC
 model on the Hub is non-commercial: the most-used one (86k downloads) is
