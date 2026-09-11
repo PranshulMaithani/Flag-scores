@@ -15,10 +15,10 @@ outcome captured in `PROJECT_BRIEF.md`. The answers that most changed the design
   This kills any plan involving a large supervised head. The system has to be
   *feature-first with a thin fitted layer*, where every feature is independently
   defensible. Fortunately this is also exactly what the explainability ask requires.
-- **3 ideal answers per question exist.** Originally authored to satisfy Carnegie.
-  This is the single most valuable asset we have for relevance, and Carnegie
+- **3 ideal answers per question exist.** Originally authored to satisfy the incumbent vendor.
+  This is the single most valuable asset we have for relevance, and the incumbent vendor
   apparently squandered it (0.40 correlation).
-- **Carnegie baselines: 0.6 / 0.6 / 0.6 / 0.4.** A 0.60 fluency correlation is roughly
+- **the incumbent vendor baselines: 0.6 / 0.6 / 0.6 / 0.4.** A 0.60 fluency correlation is roughly
   what speech-rate-and-pause features alone achieve in the literature, which suggests
   the incumbent is not doing anything sophisticated. The bar is soft.
 - **Accent distribution: Indian, Filipino, African. No native speakers.** This is the
@@ -73,21 +73,21 @@ one box that matters. Instead:
 Covers wav/flac/ogg, which is every corpus in the eval plan. Verified on LibriSpeech.
 
 ### Client screenshots: the question set (major)
-The client sent photographs of `MainSheet.xlsx`. This changed the design more than
+The client sent photographs of `the client spreadsheet`. This changed the design more than
 anything since the requirements call. Captured to `data/raw/questions_sample.json`.
 
 **24 questions, and they split cleanly into the two families ADR-007 predicted** —
-16 personal/experiential (*"Share how you celebrated your most recent birthday"*,
-*"Talk about a friend you used to be close with but later lost touch"*) and 8
-opinion/argumentative (*"In your opinion, does technology improve human thinking or make
-people more dependent?"*, *"Does teamwork always produce better results than working
+16 personal/experiential (*"Describe what you did on your last birthday"*,
+*"Talk about someone you were once close to but no longer see"*) and 8
+opinion/argumentative (*"In your opinion, does online news make people better informed or make
+people better informed?"*, *"Is working in a group always more productive than working
 alone?"*). The continuous-shareability router is not hypothetical; it is needed.
 
 **ADR-006 confirmed on real data.** Three ideal answers for the birthday question were
 fully legible. Their content is essentially disjoint:
-1. family dinner at home, mother cooks, brother buys a bad cake
-2. surprise evening at a café organised by a friend
-3. solo day off, bookshop, dinner with sister, handmade notebook gift
+1. a quiet dinner at home with family
+2. a surprise gathering organised by a friend
+3. a solo day out ending with a handmade gift
 
 Cosine similarity between these would be low, yet all three are *perfect* answers. Any
 system scoring relevance by resemblance to an ideal answer is measuring the wrong

@@ -1,7 +1,7 @@
 # Project Brief — Spoken Open-Response Scoring
 
-**Status:** active · **Owner:** Pranshul (Mercer Mettl) · **Started:** 2026-09-11
-**Goal:** Replace the incumbent third-party scoring vendor ("Carnegie") for spoken
+**Status:** active · **Owner:** client engineering · **Started:** 2026-09-11
+**Goal:** Replace the incumbent third-party scoring vendor  for spoken
 open-ended assessment responses with a self-hosted pipeline.
 
 ---
@@ -12,7 +12,7 @@ Candidates answer an open-ended question by speaking. We know the question text.
 We receive the audio. We must return:
 
 **Four scores** (continuous 0–100, correlated against human 0–5 integer labels):
-| Category  | Meaning (per client) | Carnegie baseline (Pearson) |
+| Category  | Meaning (per client) | the incumbent vendor baseline (Pearson) |
 |-----------|----------------------|------------------------------|
 | Grammar   | grammatical accuracy of what was said | ~0.60 |
 | Lexical   | vocabulary quality / sophistication    | ~0.60 |
@@ -31,7 +31,7 @@ Flags exist to detect **gaming/cheating**, not to measure disfluency.
 
 ## 2. Success criteria
 
-1. Beat Carnegie's per-category correlation on the client's held-out set of ~350 items.
+1. Beat the incumbent vendor's per-category correlation on the client's held-out set of ~350 items.
    Primary target: **relevance > 0.40**. Secondary: the other three > 0.60.
 2. Flags validated on client-built edge-case sets; continuous scores so thresholds
    are tunable post-hoc without retraining.
@@ -59,9 +59,9 @@ Flags exist to detect **gaming/cheating**, not to measure disfluency.
 
 **Have:**
 - Question text at inference time
-- **3 ideal answers (text) per question** — originally authored for Carnegie
+- **3 ideal answers (text) per question** — originally authored for the incumbent vendor
 - ~350 human-labelled client items (held by client, test-only)
-- Carnegie's own per-item outputs (for baseline comparison, held by client)
+- the incumbent vendor's own per-item outputs (for baseline comparison, held by client)
 
 **Do not have:**
 - Any client audio, transcripts, or training data

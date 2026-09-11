@@ -92,8 +92,8 @@ examples:
 
 | Family | Example | Is ideal-answer *content* reusable? |
 |---|---|---|
-| **Personal / experiential** | *"Talk about a friend you were close with but later lost touch."* | **No** |
-| **Opinion / argumentative** | *"Do you think technological advancements made humans more dependent?"* | **Yes** |
+| **Personal / experiential** | *"Talk about someone you were once close to but no longer see."* | **No** |
+| **Opinion / argumentative** | *"Do you think online news makes people better informed?"* | **Yes** |
 
 Ideal answers are 3 independent C1/C2 model responses, ~6–7 lines / ~140 words each.
 Candidate responses cap at 60 s, so ~120–150 words — comparable length, which is
@@ -129,7 +129,7 @@ What a good answer and an ideal answer genuinely share is not content but **disc
 moves**: who the person was · how they met · what the closeness consisted of · how
 contact was lost · how the speaker feels about it now.
 
-> **Working hypothesis for why Carnegie sits at 0.40 on relevance while managing 0.60
+> **Working hypothesis for why the incumbent vendor sits at 0.40 on relevance while managing 0.60
 > elsewhere.** The other three categories are properties of the response alone and need
 > no question conditioning. Relevance is the only one that requires reasoning about the
 > prompt — and the obvious implementation (embed the response, embed the ideal answers,
@@ -147,7 +147,7 @@ Rather than matching `R` against `Ik` directly:
 3. **Intersect.** A move appearing (semantically, not literally) in **>= 2 of 3** ideal
    answers is a **required move**. A move appearing in only one is personal specificity
    and is discarded. *Three independent ideal answers are exactly enough to separate
-   signal from idiosyncrasy — this is the asset Carnegie had and did not exploit.*
+   signal from idiosyncrasy — this is the asset the incumbent vendor had and did not exploit.*
 4. **Decompose `Q`** by dependency parse into required elements — *talk about* `[a
    friend]` `[you were close with]` `[but later lost touch]` → three elements.
 5. **Rubric** = union of (3) and (4), derived once per question and cached.
@@ -180,7 +180,7 @@ more dependent?"* is irrelevant if it never takes a position, however fluent it 
 
 | Feature | Definition |
 |---|---|
-| `stance_clarity` | does R commit to a position? NLI against generated stance hypotheses (*"The speaker thinks technology increased dependence"* / *"...did not"*), plus opinion-marker and modality density |
+| `stance_clarity` | does R commit to a position? NLI against generated stance hypotheses (*"The speaker thinks online news improves understanding"* / *"...did not"*), plus opinion-marker and modality density |
 | `reason_count` | distinct supporting reasons, segmented on causal connectives (because, since, therefore, as a result) |
 | `argument_coverage` | coverage of argument points mined from the ideal answers — **valid here**, unlike the personal family |
 | `evidence_presence` | concrete examples / instances offered in support |

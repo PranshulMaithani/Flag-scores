@@ -8,8 +8,8 @@ while relevance is the only category that requires reasoning about the prompt.
 The obvious implementation -- embed the response, embed the ideal answers, take
 cosine -- is close to uncorrelated with relevance on *personal-narrative* prompts,
 because it is dominated by whose story it is. The client's three ideal answers for
-"Share how you celebrated your most recent birthday" describe a family dinner, a
-surprise party at a cafe, and a solo day ending with a sister's dinner. Content
+"Describe what you did on your last birthday" describe a quiet dinner at home, a
+surprise gathering, and a solo day out. Content
 overlap is near zero; all three are perfect answers.
 
 So we do not compare content. We derive a per-question rubric:
@@ -171,7 +171,7 @@ class RelevanceRubric:
 def _question_elements(p: ParsedText) -> list[str]:
     """Decompose the question into the things a response must address.
 
-    "Talk about a friend you were close with but later lost touch" yields the
+    "Talk about someone you were once close to but no longer see" yields the
     noun phrase plus each modifying clause, so an answer that names a friend but
     never mentions losing contact is correctly marked incomplete.
     """
@@ -278,7 +278,7 @@ def _shareability(parsed: list[ParsedText], question_terms: set[str]) -> float:
     High for opinion prompts, where three model answers converge on the same
     substantive vocabulary (navigation, calculator, arithmetic, dependence). Near
     zero for personal prompts, where the rare words are one person's specifics
-    (biryani vs cafe vs bookshop) and only common function vocabulary is shared.
+    (one person's biryani, another's harbour, a third's allotment) and only common function vocabulary is shared.
 
     Took three attempts, and both failures are instructive:
 
@@ -578,7 +578,7 @@ def _topic_drift(
 def _argument_features(p: ParsedText, prof: dict[str, float]) -> dict[str, float]:
     """Features that matter for opinion prompts.
 
-    An answer to "do you think technology made humans more dependent?" is
+    An answer to "do you think online news makes people better informed?" is
     irrelevant if it never takes a position, no matter how fluent it is. These
     degrade to neutral on narrative prompts rather than to zero.
     """

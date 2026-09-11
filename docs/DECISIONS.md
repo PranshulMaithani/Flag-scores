@@ -122,8 +122,8 @@ Direct similarity between a response and an ideal answer is therefore dominated 
 5. score coverage of that rubric, on entity-masked representations throughout.
 
 Three independent ideal answers are exactly enough to separate the required from the
-idiosyncratic. This is the asset the client already bought for Carnegie and that
-Carnegie appears not to have exploited.
+idiosyncratic. This is the asset the client already bought for the incumbent vendor and that
+the incumbent vendor appears not to have exploited.
 
 **Why this is the opening:** grammar/lexical/fluency are properties of the response
 alone and need no question conditioning — hence the incumbent managing 0.60 on all
@@ -168,7 +168,7 @@ client can inspect directly, computed from assets they already own.
 ## ADR-008 — Output format is XML
 **Date:** 2026-09-11 · **Status:** accepted
 
-Client: *"leave carnegie you can make xml output with all your scores flag and
+Client: *"leave the incumbent vendor you can make xml output with all your scores flag and
 everything."* No requirement to mirror the incumbent schema.
 
 **Decision:** emit XML carrying, per item — the four 0–100 scores, each with its

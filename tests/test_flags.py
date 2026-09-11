@@ -48,7 +48,7 @@ GENUINE = (
     "a long time afterwards. Nothing dramatic happened but I felt genuinely "
     "relaxed by the end of the evening."
 )
-QUESTION = "Share how you celebrated your most recent birthday."
+QUESTION = "Describe what you did on your last birthday."
 
 
 class TestHelpers:

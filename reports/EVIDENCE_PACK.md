@@ -60,9 +60,9 @@ close to **uncorrelated** with relevance on personal-narrative prompts.
 Your own data shows why. The three ideal answers for *"Share how you celebrated
 your most recent birthday"* describe:
 
-1. a family dinner at home — mother cooks, brother buys a bad cake
-2. a surprise evening at a café organised by a friend
-3. a solo day off — bookshop, dinner with a sister, a handmade notebook
+1. a quiet dinner at home with family
+2. a surprise gathering organised by a friend
+3. a solo day out ending with a handmade gift
 
 Content overlap between them is near zero. **All three are perfect answers.** Any
 system scoring relevance by resemblance to an ideal answer is measuring whose

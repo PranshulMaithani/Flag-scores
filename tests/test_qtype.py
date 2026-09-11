@@ -5,8 +5,9 @@ change came from a client constraint: their ideal answers are AI-generated, are
 not a gold standard, and the pipeline must not depend on them. The question text
 is always present and states the speech act it wants in its own wording.
 
-Because it is load-bearing, the client's real questions are used as the test
-cases rather than invented ones.
+The prompts below are invented, but they mirror the shape of real assessment
+items: the same imperative framings, the same "explain with reasons" markers, and
+the same auxiliary-initial yes/no phrasing the router keys on.
 """
 
 from __future__ import annotations
@@ -16,18 +17,18 @@ import pytest
 from voxscore.features.qtype import profile_question
 
 PERSONAL = [
-    "Share how you celebrated your most recent birthday.",
-    "Talk about a friend you used to be close with but later lost touch.",
-    "Describe a game you liked to play as a child.",
-    "Talk about a time when you felt nervous before doing something new.",
-    "Describe how you spend your evenings on weekends.",
+    "Describe what you did on your last birthday.",
+    "Talk about someone you were once close to but no longer see.",
+    "Describe a meal you enjoyed eating as a child.",
+    "Talk about a time when you had to wait longer than expected.",
+    "Describe how you usually spend a rainy afternoon.",
 ]
 
 OPINION = [
-    "In your opinion, does technology improve human thinking or make people more dependent? Explain with reasons.",
-    "Is it better to specialise in one skill or learn many different ones? Why do you think so?",
-    "Does teamwork always produce better results than working alone? Explain your answer with reasons.",
-    "What social pressures do young people face today that previous generations did not?",
+    "In your opinion, does online news make people better informed or more confused? Explain with reasons.",
+    "Is it better to live in a large city or a small town? Why do you think so?",
+    "Is working in a group always more productive than working alone? Explain your answer with reasons.",
+    "What everyday skills are less common today than in previous generations?",
 ]
 
 
@@ -45,11 +46,11 @@ class TestFamilyDetection:
     def test_auxiliary_initial_question_is_argumentative(self):
         """A yes/no question about the world is a request for a position.
 
-        "Does teamwork always produce better results than working alone?" matched
+        "Is working in a group always more productive than working alone?" matched
         none of the opinion phrase patterns despite being unambiguously an
         opinion prompt, which is why the auxiliary-initial rule exists.
         """
-        p = profile_question("Does teamwork always produce better results than working alone?")
+        p = profile_question("Is working in a group always more productive than working alone?")
         assert p.argumentativeness > 0
         assert p.family == "opinion"
 
@@ -57,28 +58,28 @@ class TestFamilyDetection:
 class TestDemands:
     def test_explanation_is_detected_when_requested(self):
         assert profile_question(
-            "Does teamwork always produce better results? Explain your answer with reasons."
+            "Is working in a group always more productive? Explain your answer with reasons."
         ).wants_explanation
         assert not profile_question(
-            "Describe a game you liked to play as a child."
+            "Describe a meal you enjoyed eating as a child."
         ).wants_explanation
 
     def test_comparison_is_detected(self):
         assert profile_question(
-            "Is it better to specialise in one skill or learn many different ones?"
+            "Is it better to live in a large city or a small town?"
         ).wants_comparison
 
     def test_focus_terms_exclude_framing_vocabulary(self):
         """Framing verbs appear in every prompt and carry no topical information."""
-        p = profile_question("Talk about a friend you used to be close with but later lost touch.")
-        assert "friend" in p.focus_terms
+        p = profile_question("Talk about someone you were once close to but no longer see.")
+        assert "close" in p.focus_terms
         assert "talk" not in p.focus_terms
 
     def test_focus_terms_capture_the_subject(self):
         p = profile_question(
-            "In your opinion, does technology improve human thinking or make people more dependent?"
+            "In your opinion, does online news make people better informed or more confused?"
         )
-        assert "technology" in p.focus_terms
+        assert "news" in p.focus_terms
 
 
 class TestRobustness:

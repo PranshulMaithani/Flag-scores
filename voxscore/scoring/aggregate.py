@@ -202,7 +202,7 @@ def _relevance_engagement_card(f: dict[str, float]) -> dict[str, tuple[float, fl
     """Given that it is on topic, did the candidate do what the prompt asked?
 
     Weighted by the question's own demands rather than by anything derived from
-    ideal answers. An answer to *"Does teamwork always produce better results?"*
+    ideal answers. An answer to *"Is working in a group always more productive?"*
     is irrelevant if it never takes a position, no matter how much concrete
     detail it contains; an answer to *"Talk about a friend you lost touch with"*
     is irrelevant if it contains no concrete detail, no matter how well argued.
