@@ -50,6 +50,17 @@ REFERENCE = (
 )
 
 
+# Punctuated form, for scoring. The lowercase unpunctuated REFERENCE above is
+# only correct for word-error-rate computation.
+REFERENCE_PUNCTUATED = (
+    "Please call Stella. Ask her to bring these things with her from the store: "
+    "six spoons of fresh snow peas, five thick slabs of blue cheese, and maybe a "
+    "snack for her brother Bob. We also need a small plastic snake and a big toy "
+    "frog for the kids. She can scoop these things into three red bags, and we "
+    "will go meet her Wednesday at the train station."
+)
+
+
 def norm(t: str) -> str:
     t = re.sub(r"[^a-z0-9' ]", " ", (t or "").lower())
     return re.sub(r"\s+", " ", t).strip()
@@ -63,9 +74,17 @@ def main() -> int:
     nlp = tp.get_nlp()
     gec = GrammarScorer()
 
-    # Ceiling: the same paragraph scored from a PERFECT transcript. Any group
-    # falling below this is losing points to transcription, not to language use.
-    ref_parsed = tp.parse(REFERENCE, nlp)
+    # Ceiling: the same paragraph scored from a clean transcript.
+    #
+    # NOTE: the first version passed the WER-normalised REFERENCE here, which is
+    # lowercased and stripped of punctuation for word-error scoring. spaCy then
+    # parses it as one enormous run-on sentence, so the grammar complexity
+    # features collapse and the "ceiling" came out at 48.2 -- BELOW the 71.0 that
+    # real transcripts scored. A ceiling under the measurements is not a ceiling.
+    # Uses the punctuated form now. The group-vs-group comparison below was never
+    # affected, since every group is compared to the native control rather than
+    # to this number.
+    ref_parsed = tp.parse(REFERENCE_PUNCTUATED, nlp)
     ceiling = {
         "grammar": score_category("grammar", grammar_features(ref_parsed, gec, "spoken")).score,
         "lexical": score_category("lexical", lexical_features(ref_parsed)).score,
