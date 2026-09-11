@@ -441,24 +441,19 @@ def foreign_language_flag(
     feats["auto_transcript_degenerate"] = 1.0 if degenerate else 0.0
 
     if transcript_auto and not degenerate:
-        # Floor is 0.10, not 0.40. A suspect span that transcribes as fluent
-        # English is *positive evidence the accent was misread*, and should
-        # collapse the score rather than merely damp it.
-        #
-        # Measured on Speech Accent Archive, where every speaker reads the same
-        # paragraph: Tagalog-accented English drove acoustic mean p(non-English)
-        # to 0.94 -- the language-ID model confidently calls it Tagalog -- while
-        # the suspect spans transcribed as "We also need a small plastic snake
-        # and a big toy frog for the kids." Perfect English. With a 0.40 floor
-        # those speakers still scored 23-32 and false-positived at 9.5%.
-        corroboration = 0.10 + 0.90 * _squash(feats["text_p_non_english"], 0.20, 0.70)
+        corroboration = _corroboration(feats["text_p_non_english"])
     elif degenerate:
-        # The unforced pass hallucinated. On one African-accented speaker it
-        # emitted a run of repeated Malayalam characters, which the text detector
-        # scored as emphatically non-English and the flag then "corroborated" --
-        # producing 79.5 on a fluent English speaker. A hallucination is not
-        # evidence, so abstain and fall back to bare acoustics with a discount.
-        corroboration = 0.55
+        # The unforced pass hallucinated rather than found a language. On an
+        # African-accented speaker it emitted a run of repeated Malayalam
+        # characters, which the text detector scored as emphatically non-English
+        # and the flag then "corroborated" -- producing 79.5 for someone reading
+        # the paragraph fluently.
+        #
+        # Weighted at 0.35, below the no-evidence case, because degeneracy is
+        # itself weak evidence *against* foreign speech: genuinely foreign audio
+        # decodes cleanly into its own script, while accented English is what
+        # makes the decoder lock up.
+        corroboration = 0.35
     else:
         # No suspect spans were worth transcribing, so there is nothing to
         # corroborate; discount rather than trust acoustics outright.
@@ -472,6 +467,44 @@ def foreign_language_flag(
     evidence = "; ".join(f"{k} ({v:.2f})" for k, (v, _) in top[:3] if v > 0.1) or "English throughout"
 
     return FlagResult("foreign_language", score, threshold, feats, evidence)
+
+
+# Text-LID probabilities bounding the three regimes below.
+TEXT_LID_CONFIDENT_EN = 0.15
+TEXT_LID_UNCERTAIN_HI = 0.55
+
+
+def _corroboration(p_non_english: float) -> float:
+    """Multiplier on acoustic evidence, given what the text channel says.
+
+    Deliberately **asymmetric and three-regime**, because the text channel is
+    unreliable in both directions and its uncertainty must not be mistaken for a
+    verdict:
+
+    * **Confidently English** (p < 0.15) -> 0.12. Positive evidence the accent was
+      misread, so collapse the score. This is the Tagalog case: acoustic
+      p(non-English) hit 0.94 while the suspect spans transcribed as flawless
+      English.
+    * **Uncertain** (0.15-0.55) -> ~0.70, the same as having no text evidence at
+      all. Absence of evidence is not evidence of absence.
+    * **Confidently non-English** (p > 0.55) -> 1.0. Corroborates the acoustics.
+
+    The first version interpolated linearly from 0.10, which made *uncertainty*
+    suppressive. Measured cost: a response spoken entirely in Tamil fell to 46.7
+    and 100%-foreign overall dropped from 95.1 to 73.0, because the text detector
+    is often merely unsure about transcribed non-Latin script. Fairness bought by
+    refusing to detect anything is not fairness.
+    """
+    p = float(np.clip(p_non_english, 0.0, 1.0))
+    if p <= TEXT_LID_CONFIDENT_EN:
+        return 0.12
+    if p >= TEXT_LID_UNCERTAIN_HI:
+        return 1.0
+    if p <= 0.30:
+        # 0.15 -> 0.30 : climb out of "confidently English" to neutral
+        return 0.12 + (0.70 - 0.12) * (p - TEXT_LID_CONFIDENT_EN) / (0.30 - TEXT_LID_CONFIDENT_EN)
+    # 0.30 -> 0.55 : neutral up to full corroboration
+    return 0.70 + (1.0 - 0.70) * (p - 0.30) / (TEXT_LID_UNCERTAIN_HI - 0.30)
 
 
 def _is_degenerate(text: str | None) -> bool:

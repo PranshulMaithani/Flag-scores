@@ -123,8 +123,8 @@
       },
       {
         "group": "Indian English (Svarah)",
-        "score": 20.372246968746186,
-        "corroboration": 0.4,
+        "score": 5.0930617421865465,
+        "corroboration": 0.1,
         "mean_p_non_en": 0.23472310602664948
       },
       {
@@ -136,7 +136,7 @@
       {
         "group": "Indian English (Svarah)",
         "score": 0.0,
-        "corroboration": 0.4,
+        "corroboration": 0.1,
         "mean_p_non_en": 0.1424582451581955
       },
       {
@@ -153,8 +153,8 @@
       },
       {
         "group": "Indian English (Svarah)",
-        "score": 21.87953655719757,
-        "corroboration": 0.4,
+        "score": 5.469884139299393,
+        "corroboration": 0.1,
         "mean_p_non_en": 0.2885548770427704
       },
       {
@@ -177,8 +177,8 @@
       },
       {
         "group": "Indian English (Svarah)",
-        "score": 15.156711268424989,
-        "corroboration": 0.4,
+        "score": 3.789177817106247,
+        "corroboration": 0.1,
         "mean_p_non_en": 0.2627396881580353
       },
       {
@@ -207,8 +207,8 @@
       },
       {
         "group": "Indian English (Svarah)",
-        "score": 8.20243691050838,
-        "corroboration": 0.5186454430059462,
+        "score": 4.396098265704961,
+        "corroboration": 0.27796816450891887,
         "mean_p_non_en": 0.16164448857307434
       },
       {
@@ -225,8 +225,8 @@
       },
       {
         "group": "Indian English (Svarah)",
-        "score": 1.6734011173248293,
-        "corroboration": 1.0,
+        "score": 0.9203706145286562,
+        "corroboration": 0.55,
         "mean_p_non_en": 0.17390573024749756
       },
       {
@@ -316,17 +316,17 @@
       {
         "lang": "ta",
         "proportion": 0.2,
-        "score": 20.107641863822938
+        "score": 5.026910465955734
       },
       {
         "lang": "ta",
         "proportion": 0.2,
-        "score": 12.211285042762757
+        "score": 16.79051693379879
       },
       {
         "lang": "sw",
         "proportion": 0.2,
-        "score": 19.51662533283234
+        "score": 4.879156333208085
       },
       {
         "lang": "sw",
@@ -366,7 +366,7 @@
       {
         "lang": "hi",
         "proportion": 0.5,
-        "score": 64.0764821767807
+        "score": 35.24206519722939
       },
       {
         "lang": "hi",
@@ -376,12 +376,12 @@
       {
         "lang": "ta",
         "proportion": 0.5,
-        "score": 51.019612073898315
+        "score": 28.060786640644075
       },
       {
         "lang": "ta",
         "proportion": 0.5,
-        "score": 59.642335295677185
+        "score": 32.80328441262245
       },
       {
         "lang": "sw",
@@ -396,7 +396,7 @@
       {
         "lang": "hi",
         "proportion": 1.0,
-        "score": 82.34850025177002
+        "score": 45.291675138473515
       },
       {
         "lang": "hi",
@@ -406,12 +406,12 @@
       {
         "lang": "ta",
         "proportion": 1.0,
-        "score": 89.95652770996094
+        "score": 49.47609024047852
       },
       {
         "lang": "ta",
         "proportion": 1.0,
-        "score": 80.0
+        "score": 44.0
       },
       {
         "lang": "sw",
@@ -434,7 +434,7 @@
       "55": 0.0
     },
     "Indian English (Svarah)": {
-      "15": 0.15,
+      "15": 0.0,
       "25": 0.0,
       "35": 0.0,
       "45": 0.0,
