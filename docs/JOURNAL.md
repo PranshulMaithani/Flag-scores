@@ -113,3 +113,155 @@ Two further observations from the same screenshots:
    run on, which is the one failure mode most likely to harm real candidates.
 2. The **Ideal Answers sheet as CSV** rather than photographs — only the birthday
    answers were legible.
+
+---
+
+## 2026-09-11 — Day 0 (cont.): ASR working end to end
+
+Four non-obvious failures, all found by measurement rather than by reading docs.
+Recording them because three of the four would have produced *plausible numbers*
+rather than errors, which is the dangerous kind.
+
+### 1. Whisper hung for >10 minutes on 6 seconds of audio
+Calling the processor with `padding="longest", truncation=False` produced **585
+frames instead of the 3000** Whisper's encoder expects. That is the *long-form*
+calling convention; on short input, combined with `return_timestamps` and beam
+search, generation degenerated and never terminated.
+
+Fixed by branching on duration: <=30 s uses the standard padded path (beams
+allowed), >30 s uses long-form (attention mask + timestamps, greedy only). Client
+responses cap at 60 s, so **both paths are live** and both are now exercised.
+
+Measured on large-v3: short path 1.7x realtime at beam 5, long-form 17x realtime
+greedy, 3.09 GB VRAM, 8.5 s to load. Comfortable inside the 16 GB production budget.
+
+### 2. `output_scores=True` is silently ignored
+transformers 5.x warns that the flag "is not valid and may be ignored" on the
+Whisper path and returns no scores. Reading `out.scores` would have yielded
+**exactly 0.0 confidence for every item, forever, without raising.**
+
+### 3. `generate` strips the forced decoder prefix
+The returned sequence starts at the first *text* token -- no
+`<|startoftranscript|><|en|><|transcribe|>`. So teacher-forcing on it scores a
+decoder that has been told neither its task nor its language.
+
+Caught by running a **silent-audio control**: the "confidence" of a perfect
+transcription was -8.2 while silence scored -7.8. A metric that cannot separate a
+correct transcript from no audio at all is measuring nothing. After restoring the
+prefix:
+
+| input | avg_logprob |
+|---|---|
+| clean speech | **-0.112** |
+| speech + noise | -0.684 |
+| white noise | -0.869 |
+| silence | -0.937 |
+
+Monotonic and well separated. The control is the reason this was caught at all --
+worth repeating for every confidence-like quantity we add.
+
+### 4. Whisper hallucinates on non-speech
+White noise transcribes as **"Thank you."** and pure silence as **"you"**. This is
+a well-known Whisper artefact, and it matters commercially: a candidate who says
+nothing still yields a scorable transcript. Without a quality gate the system
+would award grammar and lexical scores to silence. The `quality` feature block is
+therefore a correctness requirement, not a diagnostic nicety.
+
+### 5. torchaudio's forced aligner is unusable for us
+`torchaudio.functional.forced_align` has **no CUDA/HIP kernel** (CPU only) *and*
+emits a deprecation warning saying it will be removed as torchaudio enters
+maintenance. Every fluency feature depends on these timings.
+
+Wrote our own CTC Viterbi aligner (`asr/align.py`, ~70 lines): device-agnostic, no
+deprecated dependency, and exact token-boundary recovery via blank-extended state
+indices rather than inferring boundaries from runs of repeated ids. Pinned against
+the torchaudio reference at >95% frame agreement in `tests/test_align.py` while
+that reference still exists.
+
+### Note for the fluency module
+Smoke run showed phonation ratio 0.60 on clean read speech, depressed by ~0.5 s of
+leading silence. `phonation_time_ratio` must be computed over the **speech span**,
+not total duration, for the same reason edge pauses are trimmed: recorder start/stop
+latency is not a property of the candidate.
+
+**Status:** 27 tests passing. ASR -> alignment -> pauses -> windowed LID verified
+end to end on ROCm. Committed as `9bd2503`.
+
+---
+
+## 2026-09-11 — Day 0 (cont.): relevance, probed against the real ideal answers
+
+Built `features/relevance.py` and probed it on the client's actual birthday ideal
+answers against six hand-written responses covering the failure modes we care about.
+Three findings, two of them corrections to my own design.
+
+### shareability took three attempts and both failures were the same mistake
+The idea (ADR-007) is that agreement *among the three ideal answers* measures whether
+their content is reusable across candidates, routing between the narrative and
+argumentative strategies with no labels. The idea holds. Measuring it was harder:
+
+| attempt | personal | opinion | verdict |
+|---|---|---|---|
+| sentence-embedding agreement | 0.711 | 0.676 | **backwards** |
+| lemma Jaccard, question terms removed | 0.085 | 0.047 | **backwards** |
+| informativeness-weighted overlap | 0.066 | **0.078** | correct |
+
+Attempt 1 failed because bi-encoder similarity conflates form with content: *"It felt
+warm, easy, and very real"* and *"It felt personal, unforced, and easy to enjoy"* are
+near-identical in form and share no content whatever. Attempt 2 failed for two
+compounding reasons -- excluding question terms deleted exactly the shared substance of
+an opinion prompt (*technology*, *dependent*, *thinking*), and the residue on both
+families was dominated by common verbs any two English texts share.
+
+Weighting by word rarity fixes both. The underlying error was the same twice: **I kept
+measuring similarity of form when the quantity I wanted was shared substance.**
+
+The correct margin is thin (0.078 vs 0.066) and rests on opinion ideal answers I
+authored as a fixture, since the client's real ones were not legible. Confirming this
+against their actual opinion ideal answers is now the main reason to want that CSV.
+
+### Similarity-based relevance actively rewards the two things we must catch
+The most useful result of the probe. On the birthday rubric:
+
+- **Prompt echo scored highest of all six responses** on `sim_q` (0.787) and
+  `element_coverage` (0.886).
+- **A contentless vague answer matched a genuine one** on `move_coverage`
+  (0.761 vs 0.788).
+
+Cosine similarity cannot distinguish *answering* the question from *restating* it, nor
+from *saying nothing at length*. Any relevance score built primarily on embedding
+similarity will rank a candidate who fills 60 seconds paraphrasing the prompt above one
+who actually answers. **This is a plausible mechanism for the incumbent's 0.40.**
+
+Added three features that do separate them, all measured on content words rather than
+embeddings: `content_novelty_vs_q`, `distinct_content_rate`, `content_word_rate`. With
+`specificity` these carry the discrimination that cosine cannot.
+
+### Per-question calibration beats both absolute and self-relative thresholds
+`pct_windows_offtopic` fired on nothing (0.000 everywhere, off-topic included) under a
+threshold relative to the response's own mean -- a uniformly off-topic answer has a low
+mean and so sets itself a low bar. A global constant fails too, since baseline question
+similarity varies per prompt (0.45-0.82 across probe cases on one question). Fixed by
+referencing the **ideal answers' own** window similarity, which gives the right scale
+per question for free.
+
+### Final discrimination, all six cases separated
+| response | catching signature |
+|---|---|
+| off-topic | `sim_q` 0.453, `pct_windows_offtopic` 0.75 |
+| drifts off mid-answer | `min_window_sim` 0.376 (lowest) |
+| prompt echo | `window_sim_vs_ref` **1.289** |
+| vague | `specificity` 0.0 |
+| repetitive padding | `distinct_content_rate` 0.474 (lowest) |
+| good (quiet) / good (big party) | clean on all |
+
+`window_sim_vs_ref > 1` is close to a definition of prompt echo: a genuine answer is
+*less* question-similar than a model answer, because it adds content of its own. Echo
+exceeds the reference. This goes straight into the `prompt_read` flag.
+
+### The bias trap held
+All three real ideal answers describe a *low-key* birthday. The adversarial "BIG party"
+response scored **at or above** the quiet one on every relevance feature
+(`element_coverage` 0.781 vs 0.694, `specificity` 5.48 vs 2.86). Entity masking plus
+coverage-based matching means a truthful answer that differs in kind from the model
+answers is not penalised. Worth keeping as a permanent regression test.
