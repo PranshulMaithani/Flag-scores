@@ -6,7 +6,7 @@ Reads
 
 and writes three things:
 
-    voxscore_bundle.zip   anonymised .npy audio + the voxscore code   -> UPLOAD
+    voxscore_bundle.zip   anonymised .npy audio                       -> UPLOAD
     upload.csv            one row per audio, with a BLANK question    -> FILL IN, THEN UPLOAD
                           column for you to complete
     ciid_mapping.csv      anonymous id -> real ciid                   -> KEEP LOCAL
@@ -159,14 +159,15 @@ def main() -> int:
                      "item_id": item_id, "source_file": str(w),
                      "duration_s": round(len(audio) / SAMPLE_RATE, 3)})
 
-    # --- code ------------------------------------------------------------
+    # --- code, if it happens to be here ----------------------------------
+    # Optional on purpose. This script is meant to be a single file you drop
+    # into the folder holding the audio, and requiring the package beside it
+    # made that fail for no good reason. When absent, run_scoring.py fetches the
+    # code from the public repo instead.
     pkg = find_voxscore()
-    if pkg is None:
-        print("ERROR: could not find the voxscore package next to this script.")
-        print("       Put make_bundle.py beside the voxscore/ directory.")
-        return 1
-    shutil.copytree(pkg, staging / "voxscore",
-                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    if pkg is not None:
+        shutil.copytree(pkg, staging / "voxscore",
+                        ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
 
     # --- zip -------------------------------------------------------------
     zip_path = out_dir / "voxscore_bundle.zip"
@@ -215,6 +216,10 @@ def main() -> int:
     print(f"  2. UPLOAD BOTH  {zip_path}   ({zip_path.stat().st_size / 1e9:.2f} GB)")
     print(f"                  {upload_path}")
     print(f"  3. KEEP LOCAL   {map_path}   (the only way back to real ciids)")
+    if pkg is None:
+        print()
+        print("  (voxscore/ was not found beside this script, which is fine --")
+        print("   run_scoring.py downloads the code itself.)")
     print()
     print("Then on the scoring machine, with run_scoring.py and requirements.txt:")
     print("    pip install -r requirements.txt")

@@ -86,6 +86,42 @@ def fetch_models(token: str | None) -> None:
     log("     done")
 
 
+CODE_TARBALL = "https://github.com/PranshulMaithani/Flag-scores/archive/refs/heads/main.tar.gz"
+
+
+def ensure_code() -> None:
+    """Make sure the voxscore package is present, fetching it if it is not.
+
+    The bundle carries the code when make_bundle.py happened to sit beside it,
+    but that is not guaranteed -- the bundler is meant to be a single file you
+    drop next to the audio. Falls back to the public repo.
+    """
+    if (WORK / "voxscore" / "__init__.py").exists():
+        return
+    log("     voxscore code not in the bundle; downloading from GitHub ...")
+    import io
+    import tarfile
+    import urllib.request
+
+    with urllib.request.urlopen(CODE_TARBALL, timeout=120) as r:
+        data = r.read()
+    with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as tf:
+        members = [m for m in tf.getmembers() if "/voxscore/" in m.name]
+        if not members:
+            raise SystemExit("could not find voxscore/ in the downloaded archive")
+        root = members[0].name.split("/")[0]
+        for m in members:
+            rel = m.name.split(f"{root}/", 1)[1]
+            if not m.isfile():
+                continue
+            target = WORK / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            f = tf.extractfile(m)
+            if f:
+                target.write_bytes(f.read())
+    log("     code ready")
+
+
 def ensure_spacy_model(name: str = "en_core_web_sm") -> None:
     """Fetch the spaCy English model if it is not installed.
 
@@ -350,6 +386,7 @@ def main() -> int:
     sys.path.insert(0, str(WORK))          # the bundle carries the voxscore package
     os.environ.setdefault("HF_HOME", str(MODELS / "_hf"))
 
+    ensure_code()
     fetch_models(args.token or os.environ.get("HF_TOKEN"))
     ensure_spacy_model()
     point_config_at_local_models()
