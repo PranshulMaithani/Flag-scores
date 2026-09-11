@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 
 from voxscore.flags.detectors import (
+    _is_degenerate,
     _audio_self_similarity,
     _lcs_length,
     _longest_repeated_span,
@@ -237,6 +238,35 @@ class TestForeignLanguage:
         r = foreign_language_flag(wins, "garbled", -1.0, transcript_auto=hindi)
         assert r.features["auto_transcript_degenerate"] == 0.0
         assert r.score > 55, f"genuine Hindi only scored {r.score:.1f}"
+
+    @pytest.mark.parametrize("length", [150, 350, 600, 1200])
+    def test_degeneracy_check_is_not_a_length_artefact(self, length):
+        """Long genuine text must not be mistaken for a hallucination.
+
+        The original guard used distinct-characters / total-characters, which
+        falls mechanically as text lengthens because the alphabet is finite.
+        Measured on real transcripts: Tamil 0.080, Tagalog 0.086, Hindi 0.095,
+        Swahili 0.111 -- so a 0.12 cutoff discarded three of four genuine foreign
+        transcripts, and a response spoken entirely in Tagalog fired 0 times out
+        of 8.
+
+        This is the same error `features/lexical.py` avoids by excluding raw
+        type-token ratio, and the reason that exclusion has its own test.
+        """
+        # A small alphabet repeated as varied words, the worst realistic case.
+        import random
+        rng = random.Random(0)
+        syllables = ["ka", "ma", "na", "la", "ta", "ra", "sa", "ya", "va", "pa"]
+        words = ["".join(rng.choice(syllables) for _ in range(3)) for _ in range(length // 6)]
+        text = " ".join(words)
+        assert not _is_degenerate(text), (
+            f"{len(text)}-char genuine text rejected as degenerate"
+        )
+
+    def test_degeneracy_still_catches_real_failures(self):
+        assert _is_degenerate("ത" * 70)          # repeated character
+        assert _is_degenerate(" ".join(["thank you"] * 20))  # word-level loop
+        assert _is_degenerate("aaaaaaaaaaaaaaaaaaaa")
 
 
 class TestEvidence:
