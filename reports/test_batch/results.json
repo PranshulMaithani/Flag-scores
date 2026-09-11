@@ -4,9 +4,9 @@
     "items": 3,
     "failed": 0,
     "unscorable": 1,
-    "elapsed_s": "84.8",
+    "elapsed_s": "58.8",
     "audio_s": "61.1",
-    "realtime_factor": "0.72",
+    "realtime_factor": "1.04",
     "device": "device=cuda backend=ROCm/HIP gpu=AMD Radeon RX 9070 XT vram=17.1GB dtype=torch.bfloat16"
   },
   "items": [
@@ -58,20 +58,23 @@
         },
         "relevance": {
           "name": "relevance",
-          "score": 9.9,
+          "score": 9.99,
           "confidence": 1.0,
           "contributions": {
-            "element_coverage": 0.0564,
-            "sim_q": 0.0357,
+            "element_coverage": 0.0568,
+            "sim_q": 0.036,
             "pct_windows_offtopic": 0.0,
             "move_coverage": 0.007,
-            "specificity": 0.0231,
-            "content_novelty_vs_q": 0.0165,
-            "profile_match": 0.0142,
-            "distinct_content_rate": 0.0099
+            "content_novelty_vs_q": 0.0158,
+            "distinct_content_rate": 0.0093,
+            "specificity": 0.0301,
+            "stance_clarity": 0.0,
+            "reason_count": 0.0,
+            "evidence_presence": 0.0,
+            "profile_match": 0.0092
           },
           "notes": [
-            "anchor=0.101 x engagement_multiplier=0.977"
+            "anchor=0.101 x engagement_multiplier=0.985"
           ]
         }
       },
@@ -130,7 +133,7 @@
         {
           "name": "foreign_language",
           "score": 0.0,
-          "threshold": 55.0,
+          "threshold": 30.0,
           "fired": false,
           "evidence": "English throughout",
           "features": {
@@ -141,7 +144,9 @@
             "nonen_duration_s": 0.0,
             "n_distinct_foreign_langs": 0.0,
             "text_p_non_english": 0.0,
-            "asr_avg_logprob": -0.0318
+            "text_lid_available": 0.0,
+            "asr_avg_logprob": -0.0318,
+            "corroboration": 0.7
           }
         }
       ],
@@ -254,6 +259,10 @@
           "specificity": 24.7312,
           "entity_specificity": 6.4516,
           "unsupported_content_ratio": 0.9459,
+          "q_argumentativeness": 0.0,
+          "q_narrativity": 1.0,
+          "q_wants_explanation": 0.0,
+          "q_wants_comparison": 0.0,
           "stance_clarity": 0.5376,
           "reason_count": 1.0,
           "counterargument_presence": 0.5,
@@ -273,6 +282,18 @@
           "recent",
           "share"
         ],
+        "question_profile": {
+          "argumentativeness": 0.0,
+          "narrativity": 1.0,
+          "wants_explanation": false,
+          "wants_comparison": false,
+          "focus_terms": [
+            "birthday",
+            "celebrate",
+            "recent"
+          ],
+          "imperative": "share"
+        },
         "required_moves": [
           "It felt warm, easy, and very real.",
           "It felt personal, unforced, and easy to enjoy.",
@@ -331,7 +352,7 @@
         "nli": "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli",
         "gec": "Unbabel/gec-t5_small",
         "device": "device=cuda backend=ROCm/HIP gpu=AMD Radeon RX 9070 XT vram=17.1GB dtype=torch.bfloat16",
-        "asr_seconds": "38.43"
+        "asr_seconds": "24.47"
       }
     },
     {
@@ -382,19 +403,22 @@
         },
         "relevance": {
           "name": "relevance",
-          "score": 29.98,
+          "score": 30.04,
           "confidence": 0.967,
           "contributions": {
-            "element_coverage": 0.1492,
-            "sim_q": 0.1506,
+            "element_coverage": 0.1494,
+            "sim_q": 0.1509,
             "pct_windows_offtopic": 0.0,
-            "specificity": 0.0919,
-            "content_novelty_vs_q": 0.0657,
-            "profile_match": 0.0,
-            "distinct_content_rate": 0.0361
+            "content_novelty_vs_q": 0.0563,
+            "distinct_content_rate": 0.0305,
+            "specificity": 0.1075,
+            "stance_clarity": 0.0,
+            "reason_count": 0.0,
+            "evidence_presence": 0.0,
+            "profile_match": 0.0
           },
           "notes": [
-            "anchor=0.303 x engagement_multiplier=0.989"
+            "anchor=0.303 x engagement_multiplier=0.991"
           ]
         }
       },
@@ -453,7 +477,7 @@
         {
           "name": "foreign_language",
           "score": 0.0,
-          "threshold": 55.0,
+          "threshold": 30.0,
           "fired": false,
           "evidence": "English throughout",
           "features": {
@@ -464,7 +488,9 @@
             "nonen_duration_s": 0.0,
             "n_distinct_foreign_langs": 0.0,
             "text_p_non_english": 0.0,
-            "asr_avg_logprob": -0.0145
+            "text_lid_available": 0.0,
+            "asr_avg_logprob": -0.0145,
+            "corroboration": 0.7
           }
         }
       ],
@@ -577,6 +603,10 @@
           "specificity": 21.5686,
           "entity_specificity": 3.9216,
           "unsupported_content_ratio": 1.0,
+          "q_argumentativeness": 0.0,
+          "q_narrativity": 1.0,
+          "q_wants_explanation": 0.0,
+          "q_wants_comparison": 0.0,
           "stance_clarity": 0.0,
           "reason_count": 0.0,
           "counterargument_presence": 0.0,
@@ -597,6 +627,19 @@
           "place",
           "talk"
         ],
+        "question_profile": {
+          "argumentativeness": 0.0,
+          "narrativity": 1.0,
+          "wants_explanation": false,
+          "wants_comparison": false,
+          "focus_terms": [
+            "comfortable",
+            "feel",
+            "happy",
+            "place"
+          ],
+          "imperative": "talk"
+        },
         "required_moves": [],
         "profile": {}
       },
@@ -607,7 +650,7 @@
         "nli": "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli",
         "gec": "Unbabel/gec-t5_small",
         "device": "device=cuda backend=ROCm/HIP gpu=AMD Radeon RX 9070 XT vram=17.1GB dtype=torch.bfloat16",
-        "asr_seconds": "8.63"
+        "asr_seconds": "2.41"
       }
     },
     {
@@ -667,17 +710,20 @@
           "score": 0.0,
           "confidence": 0.0,
           "contributions": {
-            "element_coverage": 0.0884,
-            "sim_q": 0.0493,
+            "element_coverage": 0.0881,
+            "sim_q": 0.0491,
             "pct_windows_offtopic": 0.0,
             "move_coverage": 0.0,
-            "specificity": 0.0,
             "content_novelty_vs_q": 0.0,
-            "profile_match": 0.0013,
-            "distinct_content_rate": 0.0
+            "distinct_content_rate": 0.0,
+            "specificity": 0.0,
+            "stance_clarity": 0.0,
+            "reason_count": 0.0,
+            "evidence_presence": 0.0,
+            "profile_match": 0.0008
           },
           "notes": [
-            "anchor=0.390 x engagement_multiplier=0.353",
+            "anchor=0.390 x engagement_multiplier=0.352",
             "not scorable: see quality diagnostics"
           ]
         }
@@ -736,10 +782,10 @@
         },
         {
           "name": "foreign_language",
-          "score": 35.78,
-          "threshold": 55.0,
+          "score": 25.4,
+          "threshold": 30.0,
           "fired": false,
-          "evidence": "much of the audio is non-English (0.96); ASR struggled to read it as English (0.67); sustained non-English audio (0.14)",
+          "evidence": "much of the audio is non-English (1.00); sustained non-English audio (0.33); ASR struggled to read it as English (0.67)",
           "features": {
             "max_p_non_english": 0.6826,
             "mean_p_non_english": 0.6826,
@@ -748,7 +794,9 @@
             "nonen_duration_s": 10.0,
             "n_distinct_foreign_langs": 1.0,
             "text_p_non_english": 0.0,
-            "asr_avg_logprob": -0.9374
+            "text_lid_available": 1.0,
+            "asr_avg_logprob": -0.9374,
+            "corroboration": 0.4
           }
         }
       ],
@@ -866,6 +914,10 @@
           "specificity": 0.0,
           "entity_specificity": 0.0,
           "unsupported_content_ratio": 0.0,
+          "q_argumentativeness": 0.0,
+          "q_narrativity": 1.0,
+          "q_wants_explanation": 0.0,
+          "q_wants_comparison": 0.0,
           "stance_clarity": 0.0,
           "reason_count": 0.0,
           "counterargument_presence": 0.0,
@@ -885,6 +937,18 @@
           "recent",
           "share"
         ],
+        "question_profile": {
+          "argumentativeness": 0.0,
+          "narrativity": 1.0,
+          "wants_explanation": false,
+          "wants_comparison": false,
+          "focus_terms": [
+            "birthday",
+            "celebrate",
+            "recent"
+          ],
+          "imperative": "share"
+        },
         "required_moves": [
           "It felt warm, easy, and very real.",
           "It felt personal, unforced, and easy to enjoy.",
@@ -943,7 +1007,7 @@
         "nli": "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli",
         "gec": "Unbabel/gec-t5_small",
         "device": "device=cuda backend=ROCm/HIP gpu=AMD Radeon RX 9070 XT vram=17.1GB dtype=torch.bfloat16",
-        "asr_seconds": "4.26"
+        "asr_seconds": "0.93"
       }
     }
   ]

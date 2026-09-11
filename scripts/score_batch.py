@@ -24,12 +24,21 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from voxscore.config import PipelineConfig, device_report
 from voxscore.pipeline import Pipeline
+from voxscore.scoring.normalise import centre_by_question, summarise
 from voxscore.utils.audio_io import load_npy_item, load_questions
 from voxscore.xml_out import write_json, write_xml
 
 
-def write_features_csv(results, path: Path) -> Path:
-    """Flat feature table: one row per item, one column per feature."""
+def write_features_csv(results, path: Path, centred: bool = True) -> Path:
+    """Flat feature table: one row per item, one column per feature.
+
+    When ``centred``, also emits ``<category>_centred`` columns z-scored within
+    each question. Relevance ranks perfectly *within* a question but only 0.964
+    when questions are pooled, so if you compute one correlation over all items
+    the cross-question scale difference costs you. Both columns ship because
+    which one is right depends on whether your raters graded each response
+    against its own prompt or on one absolute scale -- compare them and find out.
+    """
     cols: list[str] = []
     for r in results:
         for block, feats in r.features.items():
@@ -37,7 +46,18 @@ def write_features_csv(results, path: Path) -> Path:
                 name = f"{block}__{k}"
                 if name not in cols:
                     cols.append(name)
-    score_cols = [f"score__{c}" for c in ("grammar", "lexical", "fluency", "relevance")]
+    cats = ("grammar", "lexical", "fluency", "relevance")
+    rows_for_centring = [
+        {"question_id": r.question_id, "scorable": int(r.quality.get("scorable", 0)),
+         **{c: (r.scores[c].score if c in r.scores else None) for c in cats}}
+        for r in results
+    ]
+    if centred:
+        centre_by_question(rows_for_centring)
+
+    score_cols = [f"score__{c}" for c in cats]
+    if centred:
+        score_cols += [f"score__{c}_centred" for c in cats]
     flag_cols = [f"flag__{f.name}" for f in (results[0].flags if results else [])]
     header = (["item_id", "question_id", "duration_s", "word_count", "scorable"]
               + score_cols + flag_cols + cols)
@@ -46,14 +66,17 @@ def write_features_csv(results, path: Path) -> Path:
     with path.open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(header)
-        for r in results:
+        for idx, r in enumerate(results):
             flat = {f"{b}__{k}": v for b, feats in r.features.items() for k, v in feats.items()}
             row = [
                 r.item_id, r.question_id or "", round(r.duration_s, 3),
                 int(r.quality.get("word_count", 0)), int(r.quality.get("scorable", 0)),
             ]
-            row += [round(r.scores[c].score, 3) if c in r.scores else ""
-                    for c in ("grammar", "lexical", "fluency", "relevance")]
+            row += [round(r.scores[c].score, 3) if c in r.scores else "" for c in cats]
+            if centred:
+                cr = rows_for_centring[idx]
+                row += [round(cr.get(f"{c}_centred"), 3)
+                        if cr.get(f"{c}_centred") is not None else "" for c in cats]
             row += [round(f.score, 3) for f in r.flags]
             row += [round(flat.get(c, float("nan")), 6) if c in flat else "" for c in cols]
             w.writerow(row)
@@ -131,6 +154,21 @@ def main() -> int:
     xml_p = write_xml(results, out_dir / "results.xml", meta)
     json_p = write_json(results, out_dir / "results.json", meta)
     csv_p = write_features_csv(results, out_dir / "features.csv")
+
+    # Report what per-question centring did, so it is visible rather than silent.
+    ok_rows = [{"question_id": r.question_id,
+                "scorable": int(r.quality.get("scorable", 0)),
+                **{c: (r.scores[c].score if c in r.scores else None)
+                   for c in ("grammar", "lexical", "fluency", "relevance")}}
+               for r in results]
+    centre_by_question(ok_rows)
+    n_centred = sum(1 for r in ok_rows if str(r.get("centring", "")).startswith("z within"))
+    if n_centred:
+        print("")
+        print(f"per-question centring applied to {n_centred}/{len(ok_rows)} items")
+        print("compute your correlation against BOTH score__<cat> and "
+              "score__<cat>_centred; whichever is higher tells you whether your "
+              "raters graded relative to the prompt")
 
     print(f"\nscored {len(results)} items in {elapsed:.0f}s "
           f"({audio_s / max(elapsed, 1e-9):.2f}x realtime)")

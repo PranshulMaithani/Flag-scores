@@ -9,3 +9,7 @@ __pycache__/
 .pytest_cache/
 *.npy
 !data/raw/questions_sample.json
+
+# secrets - never commit
+.env
+.hf_token

@@ -4,9 +4,9 @@
     <meta name="items" value="3"/>
     <meta name="failed" value="0"/>
     <meta name="unscorable" value="1"/>
-    <meta name="elapsed_s" value="84.8"/>
+    <meta name="elapsed_s" value="58.8"/>
     <meta name="audio_s" value="61.1"/>
-    <meta name="realtime_factor" value="0.72"/>
+    <meta name="realtime_factor" value="1.04"/>
     <meta name="device" value="device=cuda backend=ROCm/HIP gpu=AMD Radeon RX 9070 XT vram=17.1GB dtype=torch.bfloat16"/>
   </run>
   <items>
@@ -44,19 +44,22 @@
             <contribution feature="long_pause_rate" value="0.0655"/>
           </contributions>
         </score>
-        <score category="relevance" value="9.9048" confidence="1">
+        <score category="relevance" value="9.9852" confidence="1">
           <explanation>relevance 10/100 - element coverage weak (0.15); sim q weak (0.15); specificity strong (1.00)</explanation>
           <contributions>
-            <contribution feature="element_coverage" value="0.0564"/>
-            <contribution feature="sim_q" value="0.0357"/>
-            <contribution feature="specificity" value="0.0231"/>
-            <contribution feature="content_novelty_vs_q" value="0.0165"/>
-            <contribution feature="profile_match" value="0.0142"/>
-            <contribution feature="distinct_content_rate" value="0.0099"/>
+            <contribution feature="element_coverage" value="0.0568"/>
+            <contribution feature="sim_q" value="0.036"/>
+            <contribution feature="specificity" value="0.0301"/>
+            <contribution feature="content_novelty_vs_q" value="0.0158"/>
+            <contribution feature="distinct_content_rate" value="0.0093"/>
+            <contribution feature="profile_match" value="0.0092"/>
             <contribution feature="move_coverage" value="0.007"/>
             <contribution feature="pct_windows_offtopic" value="0"/>
+            <contribution feature="stance_clarity" value="0"/>
+            <contribution feature="reason_count" value="0"/>
+            <contribution feature="evidence_presence" value="0"/>
           </contributions>
-          <note>anchor=0.101 x engagement_multiplier=0.977</note>
+          <note>anchor=0.101 x engagement_multiplier=0.985</note>
         </score>
       </scores>
       <flags scale="0-100" note="continuous scores; thresholds are recommendations and are tunable">
@@ -99,7 +102,7 @@
             <feature name="window_sim_vs_ref" value="0.6058"/>
           </features>
         </flag>
-        <flag name="foreign_language" score="0" threshold="55" fired="false">
+        <flag name="foreign_language" score="0" threshold="30" fired="false">
           <evidence>English throughout</evidence>
           <features>
             <feature name="max_p_non_english" value="0.0022"/>
@@ -109,7 +112,9 @@
             <feature name="nonen_duration_s" value="0"/>
             <feature name="n_distinct_foreign_langs" value="0"/>
             <feature name="text_p_non_english" value="0"/>
+            <feature name="text_lid_available" value="0"/>
             <feature name="asr_avg_logprob" value="-0.0318"/>
+            <feature name="corroboration" value="0.7"/>
           </features>
         </flag>
       </flags>
@@ -212,6 +217,10 @@
           <feature name="specificity" value="24.7312"/>
           <feature name="entity_specificity" value="6.4516"/>
           <feature name="unsupported_content_ratio" value="0.9459"/>
+          <feature name="q_argumentativeness" value="0"/>
+          <feature name="q_narrativity" value="1"/>
+          <feature name="q_wants_explanation" value="0"/>
+          <feature name="q_wants_comparison" value="0"/>
           <feature name="stance_clarity" value="0.5376"/>
           <feature name="reason_count" value="1"/>
           <feature name="counterargument_presence" value="0.5"/>
@@ -271,18 +280,21 @@
             <contribution feature="long_pause_rate" value="0.0571"/>
           </contributions>
         </score>
-        <score category="relevance" value="29.9842" confidence="0.9667">
+        <score category="relevance" value="30.0354" confidence="0.9667">
           <explanation>relevance 30/100 - sim q adequate (0.40); element coverage weak (0.25); specificity strong (1.00)</explanation>
           <contributions>
-            <contribution feature="sim_q" value="0.1506"/>
-            <contribution feature="element_coverage" value="0.1492"/>
-            <contribution feature="specificity" value="0.0919"/>
-            <contribution feature="content_novelty_vs_q" value="0.0657"/>
-            <contribution feature="distinct_content_rate" value="0.0361"/>
+            <contribution feature="sim_q" value="0.1509"/>
+            <contribution feature="element_coverage" value="0.1494"/>
+            <contribution feature="specificity" value="0.1075"/>
+            <contribution feature="content_novelty_vs_q" value="0.0563"/>
+            <contribution feature="distinct_content_rate" value="0.0305"/>
             <contribution feature="pct_windows_offtopic" value="0"/>
+            <contribution feature="stance_clarity" value="0"/>
+            <contribution feature="reason_count" value="0"/>
+            <contribution feature="evidence_presence" value="0"/>
             <contribution feature="profile_match" value="0"/>
           </contributions>
-          <note>anchor=0.303 x engagement_multiplier=0.989</note>
+          <note>anchor=0.303 x engagement_multiplier=0.991</note>
         </score>
       </scores>
       <flags scale="0-100" note="continuous scores; thresholds are recommendations and are tunable">
@@ -325,7 +337,7 @@
             <feature name="window_sim_vs_ref" value="0"/>
           </features>
         </flag>
-        <flag name="foreign_language" score="0" threshold="55" fired="false">
+        <flag name="foreign_language" score="0" threshold="30" fired="false">
           <evidence>English throughout</evidence>
           <features>
             <feature name="max_p_non_english" value="0.0012"/>
@@ -335,7 +347,9 @@
             <feature name="nonen_duration_s" value="0"/>
             <feature name="n_distinct_foreign_langs" value="0"/>
             <feature name="text_p_non_english" value="0"/>
+            <feature name="text_lid_available" value="0"/>
             <feature name="asr_avg_logprob" value="-0.0145"/>
+            <feature name="corroboration" value="0.7"/>
           </features>
         </flag>
       </flags>
@@ -438,6 +452,10 @@
           <feature name="specificity" value="21.5686"/>
           <feature name="entity_specificity" value="3.9216"/>
           <feature name="unsupported_content_ratio" value="1"/>
+          <feature name="q_argumentativeness" value="0"/>
+          <feature name="q_narrativity" value="1"/>
+          <feature name="q_wants_explanation" value="0"/>
+          <feature name="q_wants_comparison" value="0"/>
           <feature name="stance_clarity" value="0"/>
           <feature name="reason_count" value="0"/>
           <feature name="counterargument_presence" value="0"/>
@@ -494,16 +512,19 @@
         <score category="relevance" value="0" confidence="0">
           <explanation>relevance 0/100 - element coverage adequate (0.44); sim q adequate (0.37); profile match weak (0.02)</explanation>
           <contributions>
-            <contribution feature="element_coverage" value="0.0884"/>
-            <contribution feature="sim_q" value="0.0493"/>
-            <contribution feature="profile_match" value="0.0013"/>
+            <contribution feature="element_coverage" value="0.0881"/>
+            <contribution feature="sim_q" value="0.0491"/>
+            <contribution feature="profile_match" value="0.0008"/>
             <contribution feature="pct_windows_offtopic" value="0"/>
             <contribution feature="move_coverage" value="0"/>
-            <contribution feature="specificity" value="0"/>
             <contribution feature="content_novelty_vs_q" value="0"/>
             <contribution feature="distinct_content_rate" value="0"/>
+            <contribution feature="specificity" value="0"/>
+            <contribution feature="stance_clarity" value="0"/>
+            <contribution feature="reason_count" value="0"/>
+            <contribution feature="evidence_presence" value="0"/>
           </contributions>
-          <note>anchor=0.390 x engagement_multiplier=0.353</note>
+          <note>anchor=0.390 x engagement_multiplier=0.352</note>
           <note>not scorable: see quality diagnostics</note>
         </score>
       </scores>
@@ -547,8 +568,8 @@
             <feature name="window_sim_vs_ref" value="0"/>
           </features>
         </flag>
-        <flag name="foreign_language" score="35.7818" threshold="55" fired="false">
-          <evidence>much of the audio is non-English (0.96); ASR struggled to read it as English (0.67); sustained non-English audio (0.14)</evidence>
+        <flag name="foreign_language" score="25.3976" threshold="30" fired="false">
+          <evidence>much of the audio is non-English (1.00); sustained non-English audio (0.33); ASR struggled to read it as English (0.67)</evidence>
           <features>
             <feature name="max_p_non_english" value="0.6826"/>
             <feature name="mean_p_non_english" value="0.6826"/>
@@ -557,7 +578,9 @@
             <feature name="nonen_duration_s" value="10"/>
             <feature name="n_distinct_foreign_langs" value="1"/>
             <feature name="text_p_non_english" value="0"/>
+            <feature name="text_lid_available" value="1"/>
             <feature name="asr_avg_logprob" value="-0.9374"/>
+            <feature name="corroboration" value="0.4"/>
           </features>
         </flag>
       </flags>
@@ -664,6 +687,10 @@
           <feature name="specificity" value="0"/>
           <feature name="entity_specificity" value="0"/>
           <feature name="unsupported_content_ratio" value="0"/>
+          <feature name="q_argumentativeness" value="0"/>
+          <feature name="q_narrativity" value="1"/>
+          <feature name="q_wants_explanation" value="0"/>
+          <feature name="q_wants_comparison" value="0"/>
           <feature name="stance_clarity" value="0"/>
           <feature name="reason_count" value="0"/>
           <feature name="counterargument_presence" value="0"/>
