@@ -780,3 +780,87 @@ That would let Tamil fire on its acoustic evidence without reopening the Tagalog
 positive, since the Tagalog case has text *positively* contradicting.
 
 Not attempted: measurement stops here for the session.
+
+---
+
+## 2026-09-11 — Day 0 (真 end): the Tamil failure was my own length artefact
+
+Client asked me to actually run the Tamil case rather than accept the dose-response
+number. The dose run used 2 samples per language; this used 8, and the larger sample
+made the mechanism obvious in one table.
+
+### The measurement
+100% non-English, n=8 per language, all of which should fire:
+
+| lang | score | text_p_non_en | **degen** | corrob | fires@30 |
+|---|---|---|---|---|---|
+| Tamil | 32.8 | 1.000 | **1** | 0.35 | 6/8 |
+| Hindi | 43.4 | 1.000 | **1** | 0.35 | 2/8 |
+| Tagalog | 28.3 | 1.000 | **1** | 0.35 | **0/8** |
+| Swahili | 46.6 | 1.000 | 0 | 1.00 | 7/8 |
+| Yoruba | 72.0 | 1.000 | 0 | 1.00 | 8/8 |
+
+Every transcript was correct, fluent, obviously-foreign text — *"Matapos maganap ang
+aksidente, si Gibson ay dinala sa osipital"* is real Tagalog. The text channel had the
+right answer every single time (`text_p_non_english = 1.000`). **The degeneracy guard
+was throwing it away.**
+
+### The cause
+`_is_degenerate` tested `len(set(chars)) / len(chars) < 0.12`. That is a **length
+artefact**: distinct characters are bounded by the alphabet while the denominator grows
+with the text, so any long passage scores low by arithmetic.
+
+Measured on genuine 340-450 character transcripts:
+
+| | chars | diversity | verdict |
+|---|---|---|---|
+| Tamil | 410 | 0.080 | rejected |
+| Tagalog | 339 | 0.086 | rejected |
+| Hindi | 452 | 0.095 | rejected |
+| Swahili | 350 | **0.111** | passed, by 0.011 |
+
+Three of four genuine transcripts were discarded as hallucinations, and Swahili survived
+on luck. That is the whole explanation for the language-dependent spread I had written
+up as an unresolved trade-off requiring an architectural change.
+
+**This is the same mistake the lexical module explicitly avoids.** `features/lexical.py`
+excludes raw type-token ratio with the comment "a length artefact, not a vocabulary
+measure", and there is a unit test demonstrating it. I then wrote a character-level TTR
+as a guard and did not recognise it as the same thing.
+
+### The fix
+Dropped the diversity check. Kept the max-single-character fraction, which is
+length-robust and was doing the real work all along (0.077-0.236 on genuine text against
+~1.0 for the repeated-character hallucination), and added a distinct-*word* ratio check
+for Whisper's word-level repetition loops.
+
+### Result
+| lang | before | after | fires@30 |
+|---|---|---|---|
+| Tamil | 32.8 | **93.6** | 8/8 |
+| Tagalog | 28.3 | **80.8** | 8/8 |
+| Hindi | 43.4 | **82.9** | 8/8 |
+| Swahili | 46.6 | **92.4** | 8/8 |
+| Yoruba | 72.0 | **96.2** | 8/8 |
+
+40/40 fire, minimum 80.0. Fairness re-verified and unchanged: **0.0% false positives on
+every accent group at threshold 30**, with Filipino improving (max 28.0 -> 9.6).
+
+Accented-English ceiling 28.8, foreign-language floor 80.0. **A 51-point separation**
+where there had been overlap.
+
+### What this episode is about
+I wrote three architectural changes to work around a symptom — span-targeted
+corroboration, a corroboration floor, a three-regime curve — and documented the
+remaining spread as a fundamental trade-off needing an OR-of-conditions redesign. The
+actual cause was one bad line in a helper, of a bug class already documented and
+unit-tested elsewhere in the same codebase.
+
+Two of those three changes are still right on their merits. The third (the three-regime
+curve) was solving a problem that did not exist. It is retained because uncertainty
+should still be neutral rather than suppressive, but it was not what stood between this
+flag and working.
+
+**The lesson: when a metric behaves differently across categories for no principled
+reason, suspect the measurement before redesigning the architecture.** The per-language
+spread was the tell, and I spent three rounds treating it as a constraint.

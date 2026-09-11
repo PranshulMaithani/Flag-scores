@@ -523,14 +523,43 @@ def _is_degenerate(text: str | None) -> bool:
     stripped = "".join(text.split())
     if len(stripped) < 8:
         return True
-    # Character diversity: real language in any script clears this comfortably.
-    if len(set(stripped)) / len(stripped) < 0.12:
-        return True
+
     # A single character taking more than half the string is a decoding lock-up.
+    # This is the check that actually works, and it is length-robust: measured
+    # 0.077-0.236 on genuine Tamil/Hindi/Tagalog/Swahili against ~1.0 for the
+    # repeated-character hallucination.
     counts: dict[str, int] = {}
     for ch in stripped:
         counts[ch] = counts.get(ch, 0) + 1
-    return max(counts.values()) / len(stripped) > 0.5
+    if max(counts.values()) / len(stripped) > 0.5:
+        return True
+
+    # Word-level loop: Whisper sometimes repeats a phrase for the rest of the
+    # window. Measured 0.67-0.93 distinct-word ratio on genuine transcripts.
+    words = text.split()
+    if len(words) >= 12 and len(set(words)) / len(words) < 0.25:
+        return True
+
+    return False
+
+    # REMOVED: a character-diversity check, `len(set(s))/len(s) < 0.12`.
+    #
+    # It is a length artefact, not a degeneracy measure. Distinct characters are
+    # bounded by the alphabet while the denominator grows with the text, so any
+    # long passage scores low by arithmetic. Measured on genuine 340-450
+    # character transcripts: Tamil 0.080, Tagalog 0.086, Hindi 0.095, Swahili
+    # 0.111. Three of the four were rejected as "hallucinations" and Swahili
+    # passed by 0.011 of luck.
+    #
+    # The consequence was severe and language-dependent: rejecting the text
+    # channel dropped corroboration to 0.35, so a response spoken *entirely* in
+    # Tagalog scored 28 and fired 0 times out of 8, while Yoruba -- which
+    # happened to clear the threshold -- fired 8 out of 8.
+    #
+    # This is the same mistake the lexical module explicitly avoids by excluding
+    # raw type-token ratio, documented there as "a length artefact, not a
+    # vocabulary measure". I wrote a character-level TTR as a guard and did not
+    # recognise it.
 
 
 def _max_run(mask: np.ndarray) -> int:
