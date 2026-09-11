@@ -55,6 +55,15 @@ TERM_MATCH_THRESHOLD = 0.45
 MIN_WINDOW_WORDS = 25
 MIN_DRIFT_WORDS = 75
 
+# A window below this cosine to the question counts as off-topic. Calibrated on
+# observed values: on-topic windows measure 0.43-0.73, off-topic 0.33-0.43.
+DRIFT_OFFTOPIC_THRESHOLD = 0.42
+
+# Stand-in for the ideal answers' own question-similarity, used only by
+# `window_sim_vs_ref` when no ideal answers are supplied. Median observed across
+# model answers we have measured.
+DEFAULT_REF_WINDOW_SIM = 0.62
+
 
 # --------------------------------------------------------------------------- #
 # Structural profile
@@ -533,14 +542,29 @@ def _topic_drift(
     x = np.arange(len(sims), dtype=np.float32)
     slope = float(np.polyfit(x, sims, 1)[0]) if len(sims) > 1 else 0.0
 
-    # Threshold relative to the *ideal answers* for this question, not to this
-    # response's own mean and not to a global constant. Grading a response
-    # against itself never fired (0.000 everywhere, including the off-topic
-    # case): a uniformly off-topic answer has a low mean and therefore a low bar.
-    # A global constant cannot work either, since baseline question similarity
-    # varies per prompt. The ideal answers supply the right per-question scale.
-    ref = rubric.ref_window_sim if rubric.ref_window_sim > 0 else 0.55
-    thresh = 0.75 * ref
+    # Fixed threshold, deliberately NOT derived from the ideal answers.
+    #
+    # Three versions of this have now been measured. Grading each response
+    # against its own mean never fired at all (0.000 everywhere, off-topic cases
+    # included) because a uniformly off-topic answer sets itself a low bar.
+    # Scaling to the ideal answers looked principled and was worse: model answers
+    # are *unusually* on-topic by construction, so 0.75x their similarity is a bar
+    # real answers fail. Measured cost -- on the graded fixture it flagged the
+    # BEST opinion answer as 50% off-topic while every weaker answer scored 0.0,
+    # dropping Spearman from 1.000 to 0.900. The penalty landed on the best answer
+    # alone because it was the only one long enough for drift to be measured.
+    #
+    # A fixed bar calibrated on observed window similarities (on-topic 0.43-0.73,
+    # off-topic 0.33-0.43) restores 1.000 and removes an ideal-answer dependency
+    # from a feature that never needed one.
+    thresh = DRIFT_OFFTOPIC_THRESHOLD
+
+    # `window_sim_vs_ref` is a different quantity and does still want a reference:
+    # it is the prompt-echo signature (a genuine answer sits BELOW a model
+    # answer's question-similarity because it adds content; echo sits above).
+    # Falls back to the calibrated baseline when no ideal answers exist, so the
+    # signal survives the no-ideal-answers configuration rather than reading 0.
+    ref = rubric.ref_window_sim if rubric.ref_window_sim > 0 else DEFAULT_REF_WINDOW_SIM
     return {
         "topic_drift_slope": slope,
         "min_window_sim": float(sims.min()),

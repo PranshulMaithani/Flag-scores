@@ -66,6 +66,10 @@ def main() -> int:
     args = ap.parse_args()
 
     data = json.loads(Path("data/synthetic/graded_relevance.json").read_text(encoding="utf-8"))
+    own = {}
+    if args.ideals:
+        own = json.loads(
+            Path("data/synthetic/own_ideal_answers.json").read_text(encoding="utf-8"))
     nlp, emb, nli = tp.get_nlp(), Embedder(), NLI()
 
     print("=" * 92)
@@ -79,6 +83,9 @@ def main() -> int:
         qtext = block["question"]
         qp = profile_question(qtext, nlp)
         rub = build_rubric(qid, qtext, None, emb, nlp)
+        rub_i = None
+        if args.ideals and qid in own:
+            rub_i = build_rubric(qid, qtext, own[qid]["ideal_answers"], emb, nlp)
 
         print(f"\n{qid}  [{qp.family}  arg={qp.argumentativeness:.2f} "
               f"narr={qp.narrativity:.2f} expl={int(qp.wants_explanation)}]")
