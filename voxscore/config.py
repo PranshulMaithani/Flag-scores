@@ -200,7 +200,11 @@ class PipelineConfig:
     """Runtime knobs. Defaults are the research settings, not the fast settings."""
 
     device: str | None = None
-    asr_model: str = MODELS["asr"].hf_id
+    # Resolved in __post_init__, not as a field default. A dataclass default is
+    # evaluated once at class-definition time, so an offline deployment that
+    # rewrites the registry afterwards had no effect here and Whisper kept
+    # downloading from the Hub despite a local copy being present.
+    asr_model: str | None = None
     asr_beam_size: int = 5
 
     # Pause thresholds. 250 ms is the standard boundary between articulatory
@@ -216,5 +220,7 @@ class PipelineConfig:
     cache_dir: Path = field(default_factory=lambda: INTERIM_DIR / "stage_cache")
 
     def __post_init__(self) -> None:
+        if self.asr_model is None:
+            self.asr_model = MODELS["asr"].hf_id
         self.cache_dir = Path(self.cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)

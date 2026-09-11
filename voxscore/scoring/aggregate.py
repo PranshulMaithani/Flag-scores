@@ -370,6 +370,19 @@ def score_all(
         "relevance": score_category("relevance", relevance_f, qconf),
     }
 
+    # A failed grammatical-error corrector returns the text unchanged, which
+    # reads as zero errors and scores near maximum. Abstaining is the only safe
+    # response: a missing dependency must not hand out perfect grammar marks.
+    if grammar_f and not grammar_f.get("gec_available", 1.0):
+        cs = out["grammar"]
+        cs.score = 0.0
+        cs.confidence = 0.0
+        cs.notes.append(
+            "grammar not measured: the error corrector failed to load, most "
+            "often a missing sentencepiece install. Exclude from correlation "
+            "rather than treating this as flawless grammar."
+        )
+
     # Forced alignment can fail on audio that is short relative to its transcript
     # -- fast speech especially. Found during fluency validation: time-stretching
     # to 1.5x made alignment fail on several items, and the all-zero feature block

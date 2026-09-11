@@ -52,7 +52,7 @@ GRAMMAR_FEATURES = (
     + (
         "errors_per_100_words", "error_free_sentence_ratio", "n_edits",
         "clauses_per_sentence", "subordination_ratio", "mean_dependency_distance",
-        "mean_sentence_len", "verb_ratio", "grammar_confidence",
+        "mean_sentence_len", "verb_ratio", "grammar_confidence", "gec_available",
     )
 )
 
@@ -82,11 +82,20 @@ class GrammarScorer:
         self.device = device or get_device()
         self._gec = None
         self._errant = None
+        self.last_call_ok = True
+        """False when the corrector could not run.
+
+        Load failures are silent in the worst possible direction: the corrector
+        returns the text unchanged, so zero edits are found, error_free_sentence
+        _ratio reads 1.0, and grammar scores near MAXIMUM. A missing sentencepiece
+        install would hand every candidate a perfect grammar mark. The scoring
+        layer reads this and abstains instead."""
 
     def correct(self, sentences: list[str], batch_size: int = 8) -> list[str]:
         """Run GEC over sentences. Returns the input unchanged on failure."""
         if not sentences:
             return []
+        self.last_call_ok = True
         try:
             import torch
 
@@ -104,7 +113,9 @@ class GrammarScorer:
                 out.extend(tok.batch_decode(gen, skip_special_tokens=True))
             return out
         except Exception as exc:
-            log.warning("GEC failed (%s); treating text as uncorrected", exc)
+            self.last_call_ok = False
+            log.error("GEC unavailable (%s). Grammar will ABSTAIN for this item "
+                      "rather than report a perfect score.", exc)
             return list(sentences)
 
     def typed_edits(self, original: list[str], corrected: list[str]) -> list[str]:
@@ -147,6 +158,7 @@ def grammar_features(
 
     n_words = max(parsed.n_tokens, 1)
     out["grammar_confidence"] = float(min(n_words / 60.0, 1.0))
+    out["gec_available"] = 1.0
 
     if variant == "spoken":
         # Self-repairs are a speech phenomenon, not a grammatical error. Leaving
@@ -161,6 +173,9 @@ def grammar_features(
 
     scorer = scorer or GrammarScorer()
     corrected = scorer.correct(target)
+    if not getattr(scorer, "last_call_ok", True):
+        out["gec_available"] = 0.0
+        return out
 
     changed = sum(1 for o, c in zip(target, corrected) if o.strip() != c.strip())
     out["error_free_sentence_ratio"] = ratio(len(target) - changed, len(target), 1.0)

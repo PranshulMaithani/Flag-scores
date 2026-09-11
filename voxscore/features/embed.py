@@ -61,7 +61,12 @@ class Embedder:
 
     @property
     def dim(self) -> int:
-        return int(self.model.get_sentence_embedding_dimension())
+        # Renamed in sentence-transformers 5.x; support both.
+        for name in ("get_embedding_dimension", "get_sentence_embedding_dimension"):
+            fn = getattr(self.model, name, None)
+            if fn is not None:
+                return int(fn())
+        raise AttributeError("cannot determine embedding dimension")
 
 
 def cosine_matrix(a: np.ndarray, b: np.ndarray) -> np.ndarray:

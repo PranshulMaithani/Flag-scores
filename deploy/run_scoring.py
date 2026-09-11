@@ -31,6 +31,22 @@ import time
 import zipfile
 from pathlib import Path
 
+# Must be set before torch is imported anywhere.
+#
+# PyTorch JIT-compiles fused elementwise kernels through NVRTC at runtime. On a
+# machine whose CUDA runtime-compiler libraries do not match the torch build this
+# fails hard mid-run:
+#
+#   RuntimeError: nvrtc: error: failed to open libnvrtc-builtins.so.13.0
+#   ... fused_lt_gt___and___abs_where_div_log ...
+#
+# That particular kernel is T5's relative-position bucketing (abs, log, where,
+# comparisons), so it takes down the grammar corrector. Fusion is a speed
+# optimisation with no effect on results, and turning it off costs a few percent
+# while removing a whole class of environment-specific failure.
+os.environ.setdefault("PYTORCH_JIT", "0")
+os.environ.setdefault("PYTORCH_NVFUSER_DISABLE", "fallback")
+
 HERE = Path(__file__).resolve().parent
 WORK = HERE / "voxscore_work"
 NPY = WORK / "npy"
@@ -41,6 +57,48 @@ MODEL_REPO = "Pransfrance/voxscore-models"
 
 def log(msg: str = "") -> None:
     print(msg, flush=True)
+
+
+def harden_runtime() -> None:
+    """Disable the JIT fusers, defensively across torch versions."""
+    import torch
+
+    for fn, arg in (("_jit_set_texpr_fuser_enabled", False),
+                    ("_jit_set_nvfuser_enabled", False),
+                    ("_jit_override_can_fuse_on_gpu", False),
+                    ("_jit_override_can_fuse_on_cpu", False),
+                    ("_jit_set_profiling_executor", False),
+                    ("_jit_set_profiling_mode", False)):
+        try:
+            getattr(torch._C, fn)(arg)
+        except Exception:
+            pass  # not present in this torch build; nothing to disable
+
+
+def preflight() -> None:
+    """Check the awkward dependencies before spending an hour discovering them.
+
+    sentencepiece especially: without it the grammar corrector's tokenizer cannot
+    be built, and the failure mode used to be silent and flattering -- text came
+    back uncorrected, so zero errors were found and grammar scored near maximum.
+    It now abstains, but catching it here is better than discovering it per item.
+    """
+    missing = []
+    for mod, why in (("sentencepiece", "grammar correction tokenizer"),
+                     ("openpyxl", "writing the Excel output"),
+                     ("spacy", "parsing"),
+                     ("librosa", "audio features")):
+        try:
+            __import__(mod)
+        except Exception:
+            missing.append((mod, why))
+    if missing:
+        log("")
+        log("     MISSING PACKAGES:")
+        for mod, why in missing:
+            log(f"       {mod:16s} needed for {why}")
+        log(f"     pip install {' '.join(m for m, _ in missing)}")
+        log("")
 
 
 # --------------------------------------------------------------------------- #
@@ -382,6 +440,8 @@ def main() -> int:
         return 1
 
     extract(zips[0])
+    harden_runtime()
+    preflight()
 
     sys.path.insert(0, str(WORK))          # the bundle carries the voxscore package
     os.environ.setdefault("HF_HOME", str(MODELS / "_hf"))

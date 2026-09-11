@@ -26,7 +26,16 @@ from voxscore.config import SAMPLE_RATE, get_device
 
 log = logging.getLogger(__name__)
 
-ALIGN_MODEL_ID = "facebook/wav2vec2-base-960h"
+def _align_model_id() -> str:
+    """Resolve the aligner id at call time, not import time.
+
+    Must be a lookup rather than a constant: an offline deployment rewrites the
+    registry to point at locally downloaded copies, and a module-level constant
+    captured before that happens silently re-downloads from the Hub instead.
+    """
+    from voxscore.config import MODELS
+
+    return MODELS["aligner"].hf_id
 
 
 @dataclass
@@ -139,12 +148,13 @@ def ctc_forced_align(
     return path, scores
 
 
-@lru_cache(maxsize=1)
-def _load_aligner(device_str: str):
+@lru_cache(maxsize=2)
+def _load_aligner(device_str: str, model_id: str | None = None):
     from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
 
-    processor = Wav2Vec2Processor.from_pretrained(ALIGN_MODEL_ID)
-    model = Wav2Vec2ForCTC.from_pretrained(ALIGN_MODEL_ID).to(torch.device(device_str)).eval()
+    model_id = _align_model_id()
+    processor = Wav2Vec2Processor.from_pretrained(model_id)
+    model = Wav2Vec2ForCTC.from_pretrained(model_id).to(torch.device(device_str)).eval()
     return processor, model
 
 
@@ -180,7 +190,7 @@ def align_words(
     if not alignable:
         return []
 
-    processor, model = _load_aligner(str(device))
+    processor, model = _load_aligner(str(device), _align_model_id())
     model = model.to(device)
 
     wav = torch.from_numpy(np.asarray(audio, dtype=np.float32)).unsqueeze(0).to(device)
