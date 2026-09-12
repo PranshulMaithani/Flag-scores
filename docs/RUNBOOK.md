@@ -19,9 +19,13 @@ the code does not support that kernel. The fix is to boot the kernel that
 already has a working module.
 
 ```bash
-ENTRY=$(awk -F"'" '/menuentry /{print $2}' /boot/grub/grub.cfg | grep '6.17.0-1019-aws' | head -1)
+ENTRY=$(sudo awk -F"'" '/menuentry /{print $2}' /boot/grub/grub.cfg | grep '6.17.0-1019-aws' | head -1)
 echo "found: $ENTRY"
 ```
+
+`sudo` on the `awk` is required: `/boot/grub/grub.cfg` is mode 600, so without it
+you get `awk: fatal: cannot open file ... Permission denied` and `$ENTRY` is
+silently empty.
 
 Check `found:` printed a line containing `6.17.0-1019-aws`. **If it is empty,
 stop** — that kernel's boot entry is gone and this route will not work.
