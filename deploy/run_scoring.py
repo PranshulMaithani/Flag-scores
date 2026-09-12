@@ -345,6 +345,55 @@ def build_question_map(item_texts: dict[str, str]) -> tuple[dict, dict]:
     return questions, item_to_qkey
 
 
+def refuse_silent_cpu(device_arg: str | None) -> None:
+    """Stop if the machine has an NVIDIA GPU that torch cannot see.
+
+    Falling back to CPU is one line in a wall of transformers warnings, and the
+    cost of missing it is hours: whisper-large-v3 runs roughly 20-40x slower
+    there. The expensive case is specifically a box that HAS a GPU and is not
+    using it -- a driver that did not come back after a stop/start, or a torch
+    built without CUDA -- because that is always a mistake rather than a choice.
+
+    Passing --device cpu explicitly says it is a choice, and is respected.
+    """
+    if device_arg:                      # an explicit choice, either way
+        return
+
+    import shutil
+
+    import torch
+
+    if torch.cuda.is_available():
+        return
+
+    has_hardware = bool(shutil.which("nvidia-smi")) or Path("/proc/driver/nvidia").exists()
+    if not has_hardware:
+        log("     no NVIDIA GPU detected; scoring on CPU (expect roughly 20-40x "
+            "slower than a T4)")
+        return
+
+    log("")
+    log("  " + "=" * 68)
+    log("  REFUSING TO RUN: this machine has an NVIDIA GPU, but torch cannot use it.")
+    log("  " + "=" * 68)
+    log(f"  torch {torch.__version__}, built for CUDA {torch.version.cuda or 'NONE'}")
+    log(f"  torch.cuda.is_available() -> False, device_count -> "
+        f"{torch.cuda.device_count()}")
+    log("")
+    log("  Scoring would fall back to CPU and take hours instead of minutes, so")
+    log("  it is stopped here rather than discovered later. Check, in order:")
+    log("")
+    log("    nvidia-smi                       driver alive? after a stop/start it")
+    log("                                     often is not, and needs reloading")
+    log("    python -c \"import torch; print(torch.version.cuda)\"")
+    log("                                     None means a CPU-only torch wheel;")
+    log("                                     reinstall from the CUDA index")
+    log("")
+    log("  To score on CPU deliberately, pass --device cpu.")
+    log("")
+    raise SystemExit(2)
+
+
 def score_all(limit: int | None, device: str | None, no_grammar: bool,
               csv_path: Path | None, rescore: bool = False):
     from voxscore.config import PipelineConfig, device_report
@@ -380,6 +429,24 @@ def score_all(limit: int | None, device: str | None, no_grammar: bool,
     else:
         log(f"     questions loaded for all {filled} items "
             f"({len(questions)} distinct)")
+        # A relevance rubric is built once per distinct question and reused. When
+        # nearly every item has its own key that caching stops working, and the
+        # run pays the rubric cost hundreds of times instead of a handful. With
+        # three question ids the distinct count should be small; anything close
+        # to the item count means the texts differ in ways that are invisible
+        # when read -- trailing spaces, smart quotes pasted from Word, a stray
+        # candidate name -- rather than genuinely different prompts.
+        if len(questions) > max(12, 0.5 * max(filled, 1)):
+            log("")
+            log(f"     WARNING: {len(questions)} distinct question texts for "
+                f"{filled} items.")
+            log("     Rubrics are cached per distinct text, so this run will build")
+            log("     one per item and take far longer than it should. Check the")
+            log("     question_text column for trailing spaces or smart quotes;")
+            log("     items sharing a question should share EXACTLY one text.")
+            log("")
+
+    refuse_silent_cpu(device)
 
     files = sorted(NPY.glob("*.npy"))[:limit]
     todo = [f for f in files if not (CACHE / f"{f.stem}.json").exists()]
