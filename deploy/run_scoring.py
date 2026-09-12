@@ -178,15 +178,26 @@ def _prune_stray_model_files(token: str | None) -> None:
         log(f"     note: could not verify remote file list ({exc}); skipping cleanup")
         return
 
-    for f in MODELS.rglob("*"):
-        if not f.is_file():
+    # Only ever delete inside a directory the repo itself publishes. MODELS also
+    # contains HF_HOME ("_hf"), which is the Hub's own cache: its blobs, refs and
+    # logs are named by content, never appear in a repo file listing, and so look
+    # stale to every test here. An earlier version of this walked all of MODELS
+    # and deleted the cache's refs out from under it.
+    top_level = {r.split("/", 1)[0] for r in remote if "/" in r}
+
+    for name in sorted(top_level):
+        d = MODELS / name
+        if not d.is_dir():
             continue
-        rel = f.relative_to(MODELS).as_posix()
-        if rel.startswith(".") or "/." in rel:      # .complete, .cache/huggingface
-            continue
-        if rel not in remote:
-            log(f"     removing stale {rel}")
-            f.unlink(missing_ok=True)
+        for f in d.rglob("*"):
+            if not f.is_file():
+                continue
+            rel = f.relative_to(MODELS).as_posix()
+            if "/." in rel:                          # .cache/huggingface markers
+                continue
+            if rel not in remote:
+                log(f"     removing stale {rel}")
+                f.unlink(missing_ok=True)
 
 
 CODE_TARBALL = "https://github.com/PranshulMaithani/Flag-scores/archive/refs/heads/main.tar.gz"
